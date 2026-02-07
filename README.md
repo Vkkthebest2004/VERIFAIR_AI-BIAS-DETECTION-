@@ -4,16 +4,16 @@ Verifair is an enterprise-grade AI governance platform designed to detect and vi
 
 ![Verifair Dashboard](https://via.placeholder.com/800x400?text=Verifair+Dashboard+Preview)
 
-## 🚀 Features
+##  Features
 
-- **📄 Document Ingestion**: Seamlessly ingest PDF and CSV files with automatic text cleaning and context-aware chunking.
-- **🧠 Semantic Bias Sentinel**: Uses `all-mpnet-base-v2` to analyze the **semantic latent space** of text, detecting implicit bias beyond simple keyword matching.
-- **📊 Statistical Fairness Auditor**: Implements **EEOC-compliant metrics** (Four-Fifths Rule, Disparate Impact) to certify algorithmic fairness.
-- **🛡️ Toxicity & Stereotype Detection**: Integrates `unitary/toxic-bert` and custom stereotype lexicons to flag hate speech and subtle prejudices.
-- **🔮 Explainable AI (XAI)**: Provides human-readable explanations for every flagged anomaly, bridging the gap between technical metrics and business stakeholders.
-- **🎛️ Real-Time Governance**: Interactive dashboard with sensitivity sliders and live bias radar visualization.
+- ** Document Ingestion**: Seamlessly ingest PDF and CSV files with automatic text cleaning and context-aware chunking.
+- ** Semantic Bias Sentinel**: Uses `all-mpnet-base-v2` to analyze the **semantic latent space** of text, detecting implicit bias beyond simple keyword matching.
+- ** Statistical Fairness Auditor**: Implements **EEOC-compliant metrics** (Four-Fifths Rule, Disparate Impact) to certify algorithmic fairness.
+- ** Toxicity & Stereotype Detection**: Integrates `unitary/toxic-bert` and custom stereotype lexicons to flag hate speech and subtle prejudices.
+- ** Explainable AI (XAI)**: Provides human-readable explanations for every flagged anomaly, bridging the gap between technical metrics and business stakeholders.
+- ** Real-Time Governance**: Interactive dashboard with sensitivity sliders and live bias radar visualization.
 
-## 🛠️ Technology Stack
+##  Technology Stack
 
 | Component | Tech |
 |-----------|------|
@@ -22,7 +22,7 @@ Verifair is an enterprise-grade AI governance platform designed to detect and vi
 | **AI Core** | `sentence-transformers`, `fairlearn`, `scikit-learn` |
 | **Infrastructure** | Docker, Docker Compose, Redis |
 
-## 🏁 Getting Started
+##  Getting Started
 
 The recommended way to run Verifair is using **Docker Compose** for a consistent, production-like environment.
 
@@ -49,7 +49,7 @@ The recommended way to run Verifair is using **Docker Compose** for a consistent
 
 *Note: The first run may take a few minutes as it downloads the AI models (approx. 400MB).*
 
-## 🧪 Manual Development Setup
+##  Manual Development Setup
 
 If you prefer to run services individually without Docker:
 
