@@ -1,0 +1,56 @@
+
+import logging
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
+
+from backend.api.routes import router as api_router
+from backend.api.auth import router as auth_router
+from backend.config.bias_config import MODEL_NAME
+from backend.core.database import engine, Base
+
+# Create Database Tables
+Base.metadata.create_all(bind=engine)
+
+# Setup Logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger("VerifairMain")
+
+app = FastAPI(
+    title="Verifair API",
+    description="The AI Bias Detection Platform Backend",
+    version="1.0.0"
+)
+
+# CORS Configuration
+# Allow requests from Next.js frontend (usually localhost:3000)
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include API Routes
+app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(api_router, prefix="/api/v1", tags=["audit"])
+
+@app.get("/")
+def root():
+    return {
+        "message": "Welcome to Verifair API",
+        "model": MODEL_NAME,
+        "docs": "/docs"
+    }
+
+if __name__ == "__main__":
+    uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=True)
