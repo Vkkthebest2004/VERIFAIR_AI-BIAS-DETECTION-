@@ -6,12 +6,12 @@ Verifair is an enterprise-grade AI governance platform designed to detect and vi
 
 ##  Features
 
-- ** Document Ingestion**: Seamlessly ingest PDF and CSV files with automatic text cleaning and context-aware chunking.
-- ** Semantic Bias Sentinel**: Uses `all-mpnet-base-v2` to analyze the **semantic latent space** of text, detecting implicit bias beyond simple keyword matching.
-- ** Statistical Fairness Auditor**: Implements **EEOC-compliant metrics** (Four-Fifths Rule, Disparate Impact) to certify algorithmic fairness.
-- ** Toxicity & Stereotype Detection**: Integrates `unitary/toxic-bert` and custom stereotype lexicons to flag hate speech and subtle prejudices.
-- ** Explainable AI (XAI)**: Provides human-readable explanations for every flagged anomaly, bridging the gap between technical metrics and business stakeholders.
-- ** Real-Time Governance**: Interactive dashboard with sensitivity sliders and live bias radar visualization.
+-  Document Ingestion**: Seamlessly ingest PDF and CSV files with automatic text cleaning and context-aware chunking.
+-  Semantic Bias Sentinel**: Uses `all-mpnet-base-v2` to analyze the **semantic latent space** of text, detecting implicit bias beyond simple keyword matching.
+- Statistical Fairness Auditor**: Implements **EEOC-compliant metrics** (Four-Fifths Rule, Disparate Impact) to certify algorithmic fairness.
+- Toxicity & Stereotype Detection**: Integrates `unitary/toxic-bert` and custom stereotype lexicons to flag hate speech and subtle prejudices.
+-  Explainable AI (XAI)**: Provides human-readable explanations for every flagged anomaly, bridging the gap between technical metrics and business stakeholders.
+-  Real-Time Governance**: Interactive dashboard with sensitivity sliders and live bias radar visualization.
 
 ##  Technology Stack
 
@@ -32,18 +32,18 @@ The recommended way to run Verifair is using **Docker Compose** for a consistent
 
 ### Quick Start
 
-1. **Clone the repository**:
+1. Clone the repository**:
    ```bash
    git clone https://github.com/yourusername/verifair.git
    cd verifair
    ```
 
-2. **Run Services**:
+2. Run Services**:
    ```bash
    docker-compose up --build
    ```
 
-3. **Access the Application**:
+3. Access the Application**:
    - **Frontend Dashboard**: [http://localhost:3000](http://localhost:3000)
    - **Backend API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
 
@@ -71,7 +71,7 @@ npm install
 npm run dev
 ```
 
-## 📂 Project Structure
+##  Project Structure
 
 ```
 VERIFAIR/
@@ -89,13 +89,13 @@ VERIFAIR/
 └── README.md
 ```
 
-## ⚙️ Configuration
+##  Configuration
 
 Verifair is strictly configured to follow industry standards but is fully customizable.
 
 - **Bias Logic**: Modify `backend/config/bias_config.py` to adjust `IDENTITIES`, `TARGET_CONCEPTS`, and `SENSITIVITY_THRESHOLD`.
 - **Chunk Size**: Adjust text processing granularity in `backend/config/bias_config.py`.
 
-## 🛡️ License
+##  License
 
 MIT License. Built for ethical AI auditing.
