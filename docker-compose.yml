@@ -10,13 +10,17 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app/backend
+      # Mount the DB file relative to the project root into /app inside container
+      - ./verifair.db:/app/verifair.db
     environment:
-      - REDIS_URL=redis://redis:6379/0
-      - DATABASE_URL=postgresql://verifair:verifair_secret@db:5432/verifair_db
-      - SECRET_KEY=super_secret_jwt_key_change_me_in_prod
-    depends_on:
-      - redis
-      - db
+      # Use SQLite file mounted from host
+      - DATABASE_URL=sqlite:////app/verifair.db
+      - SECRET_KEY=hackathon_secret_key_change_me
+      # Connect to host's Ollama instance (mac/windows)
+      - LLM_HOST=http://host.docker.internal:11434
+      # For Linux users, use the host IP explicitly if host.docker.internal doesn't work
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
@@ -30,29 +34,8 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
+      # Internal Docker network URL for server-side rendering
       - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
     depends_on:
       - backend
     command: npm run dev
-
-  redis:
-    image: redis:alpine
-    container_name: verifair_redis
-    ports:
-      - "6379:6379"
-
-  db:
-    image: postgres:15-alpine
-    container_name: verifair_db
-    environment:
-      - POSTGRES_USER=verifair
-      - POSTGRES_PASSWORD=verifair_secret
-      - POSTGRES_DB=verifair_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-volumes:
-  redis_data:
-  postgres_data:

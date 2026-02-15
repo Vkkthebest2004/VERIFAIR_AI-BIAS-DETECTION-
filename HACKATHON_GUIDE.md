@@ -413,17 +413,30 @@ Every technique in Verifair is backed by published, peer-reviewed research:
 - Node.js 18+
 - Ollama (optional, for AI explanations)
 
-### Backend
+### Option 1: Running with Docker (Easiest Way)
+1. Install Docker Desktop.
+2. Run this command in the project root:
+   ```bash
+   docker-compose up --build
+   ```
+3. Open `http://localhost:3000` in your browser.
+4. That's it! The backend, frontend, and database are all set up automatically.
+
+### Option 2: Running Locally (Manual Setup)
+
+#### Backend
 ```bash
 cd VERIFAIR
 python -m venv backend/venv
 source backend/venv/bin/activate
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
+# Run the NLTK downloader once:
+python -m nltk.downloader punkt stopwords wordnet
 uvicorn backend.main:app --reload
 # Server runs on http://localhost:8000
 ```
 
-### Frontend
+#### Frontend
 ```bash
 cd VERIFAIR/frontend
 npm install
@@ -431,7 +444,8 @@ npm run dev
 # App runs on http://localhost:3000
 ```
 
-### Ollama (for LLM explanations)
+### Ollama (Required for AI Explanations)
+regardless of how you run the app (Docker or Local), you need Ollama running on your host machine:
 ```bash
 # Install Ollama from https://ollama.ai
 ollama pull llama3.2

@@ -1,4 +1,3 @@
-
 fastapi
 uvicorn
 sentence-transformers
@@ -6,12 +5,10 @@ scikit-learn
 pdfplumber
 pydantic
 python-multipart
-redis
 numpy
 scipy
 torch
 sqlalchemy
-psycopg2-binary
 python-jose[cryptography]
 passlib[argon2]
 argon2-cffi
@@ -20,3 +17,4 @@ pandas
 statsmodels
 fairlearn
 transformers
+nltk
