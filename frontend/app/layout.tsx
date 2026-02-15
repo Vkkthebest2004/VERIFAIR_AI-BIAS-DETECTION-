@@ -1,14 +1,13 @@
 
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth";
-
-const inter = Inter({ subsets: ["latin"] });
+import { ThemeProvider } from "@/lib/theme";
 
 export const metadata: Metadata = {
-  title: "Verifair | AI Bias Detection Platform",
-  description: "Detect, visualize, and report on sociotechnical bias in data.",
+  title: "Verifair | AI-Powered Bias Detection Platform",
+  description: "Detect, visualize, and report on sociotechnical bias in text and data using research-backed AI models.",
+  keywords: "AI, bias detection, hate speech, stereotypes, fairness, NLP",
 };
 
 export default function RootLayout({
@@ -17,11 +16,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body className="antialiased">
+        <ThemeProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

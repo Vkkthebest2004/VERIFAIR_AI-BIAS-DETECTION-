@@ -1,58 +1,244 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Space+Grotesk:wght@300..700&display=swap');
 @import "tailwindcss";
 
+/* ─── Dark Theme (Default) ─── */
 :root {
-  --background: #020617;
-  /* slate-950 */
-  --foreground: #f8fafc;
-  /* slate-50 */
+  --bg-primary: #020617;
+  --bg-secondary: #0f172a;
+  --bg-card: rgba(15, 23, 42, 0.6);
+  --bg-card-hover: rgba(30, 41, 59, 0.8);
+  --bg-input: #0f172a;
+  --border-primary: rgba(30, 41, 59, 1);
+  --border-secondary: rgba(51, 65, 85, 0.5);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --accent-primary: #6366f1;
+  --accent-secondary: #818cf8;
+  --accent-glow: rgba(99, 102, 241, 0.2);
+  --scrollbar-track: #0f172a;
+  --scrollbar-thumb: #334155;
+  --scrollbar-hover: #475569;
+  --glass-bg: rgba(15, 23, 42, 0.5);
+  --glass-border: rgba(30, 41, 59, 1);
+  --glass-panel-bg: rgba(30, 41, 59, 0.3);
+  --glass-panel-border: rgba(51, 65, 85, 0.5);
 }
 
-/* Custom Utilities */
+/* ─── Light Theme ─── */
+[data-theme="light"] {
+  --bg-primary: #f0f7fa;
+  --bg-secondary: #ffffff;
+  --bg-card: rgba(255, 255, 255, 0.85);
+  --bg-card-hover: rgba(241, 245, 249, 1);
+  --bg-input: #f8fafc;
+  --border-primary: rgba(203, 213, 225, 0.8);
+  --border-secondary: rgba(226, 232, 240, 0.8);
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --accent-primary: #4338ca;
+  --accent-secondary: #6366f1;
+  --accent-glow: rgba(67, 56, 202, 0.15);
+  --scrollbar-track: #f1f5f9;
+  --scrollbar-thumb: #cbd5e1;
+  --scrollbar-hover: #94a3b8;
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(203, 213, 225, 0.8);
+  --glass-panel-bg: rgba(248, 250, 252, 0.8);
+  --glass-panel-border: rgba(226, 232, 240, 0.8);
+}
+
+/* ─── Base Styles ─── */
+body {
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Space Grotesk', 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+/* ─── Glass Utilities ─── */
 .glass-card {
-  background-color: rgba(15, 23, 42, 0.5);
-  /* bg-slate-900/50 */
-  backdrop-filter: blur(12px);
-  /* backdrop-blur-md */
-  border: 1px solid rgba(30, 41, 59, 1);
-  /* border-slate-800 */
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-  /* shadow-xl */
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .glass-panel {
-  background-color: rgba(30, 41, 59, 0.3);
-  /* bg-slate-800/30 */
-  backdrop-filter: blur(4px);
-  /* backdrop-blur-sm */
-  border: 1px solid rgba(51, 65, 85, 0.5);
-  /* border-slate-700/50 */
+  background-color: var(--glass-panel-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-panel-border);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .text-glow {
-  text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  text-shadow: 0 0 20px var(--accent-glow);
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  overflow-x: hidden;
-}
-
-/* Custom Scrollbar for "Data Lab" feel */
+/* ─── Scrollbar ─── */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: var(--scrollbar-thumb);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: var(--scrollbar-hover);
+}
+
+/* ─── Landing Page Animations ─── */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 12px var(--accent-glow);
+  }
+
+  50% {
+    box-shadow: 0 0 28px var(--accent-glow), 0 0 56px var(--accent-glow);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.7s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.5s ease-out forwards;
+}
+
+.animate-gradient {
+  animation: gradientShift 8s ease infinite;
+  background-size: 200% 200%;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+/* Stagger delays */
+.delay-1 {
+  animation-delay: 0.1s;
+  opacity: 0;
+}
+
+.delay-2 {
+  animation-delay: 0.2s;
+  opacity: 0;
+}
+
+.delay-3 {
+  animation-delay: 0.3s;
+  opacity: 0;
+}
+
+.delay-4 {
+  animation-delay: 0.4s;
+  opacity: 0;
+}
+
+.delay-5 {
+  animation-delay: 0.5s;
+  opacity: 0;
+}
+
+/* ─── Branded Gradient Text ─── */
+.gradient-text {
+  background: linear-gradient(135deg, #4338ca, #6366f1, #06b6d4, #4338ca);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 6s ease infinite;
 }

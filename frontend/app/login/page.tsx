@@ -1,112 +1,290 @@
-
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+    Shield,
+    Eye,
+    EyeOff,
+    ArrowRight,
+    Loader2,
+    Mail,
+    Lock,
+    User,
+    Sparkles,
+} from "lucide-react";
 
 export default function LoginPage() {
-    const { login } = useAuth();
+    const { login, user, loading: authLoading } = useAuth();
+    const router = useRouter();
     const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [fullName, setFullName] = useState("");
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const videoRef = useRef<HTMLVideoElement>(null);
+
+    useEffect(() => {
+        if (!authLoading && user) {
+            router.push("/dashboard");
+        }
+    }, [user, authLoading, router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
+        setLoading(true);
 
         try {
             if (isLogin) {
-                // Login
                 const formData = new FormData();
                 formData.append("username", email);
                 formData.append("password", password);
-
-                const res = await axios.post("http://localhost:8000/api/v1/auth/token", formData);
+                const res = await axios.post(
+                    "http://localhost:8000/api/v1/auth/token",
+                    formData
+                );
                 login(res.data.access_token);
             } else {
-                // Register
                 await axios.post("http://localhost:8000/api/v1/auth/register", {
                     email,
                     password,
-                    full_name: "New User"
+                    full_name: fullName || "User",
                 });
-                // Auto-login after register
                 const formData = new FormData();
                 formData.append("username", email);
                 formData.append("password", password);
-                const res = await axios.post("http://localhost:8000/api/v1/auth/token", formData);
+                const res = await axios.post(
+                    "http://localhost:8000/api/v1/auth/token",
+                    formData
+                );
                 login(res.data.access_token);
             }
-        } catch (err: any) {
-            console.error(err);
-            const msg = err.response?.data?.detail
-                ? (typeof err.response.data.detail === 'string' ? err.response.data.detail : JSON.stringify(err.response.data.detail))
-                : "An error occurred.";
+        } catch (err: unknown) {
+            const axiosErr = err as { response?: { data?: { detail?: string | object } } };
+            const detail = axiosErr.response?.data?.detail;
+            const msg = detail
+                ? typeof detail === "string"
+                    ? detail
+                    : JSON.stringify(detail)
+                : "An error occurred. Please try again.";
             setError(msg);
+        } finally {
+            setLoading(false);
         }
     };
 
+    if (authLoading) return null;
+
     return (
-        <main className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-            <Card className="w-full max-w-md glass-card">
-                <CardHeader>
-                    <div className="flex justify-center mb-4">
-                        <div className="p-3 bg-indigo-500/20 rounded-full">
-                            <CheckCircle className="w-10 h-10 text-indigo-400" />
+        <div className="relative min-h-screen flex" data-theme="light">
+            {/* ─── Left: Video Background Panel ─── */}
+            <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+                <video
+                    ref={videoRef}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="absolute inset-0 w-full h-full object-cover"
+                >
+                    <source src="/login-bg.mp4" type="video/mp4" />
+                </video>
+                {/* Dark overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/70 via-slate-900/60 to-cyan-900/50"></div>
+
+                {/* Overlay content */}
+                <div className="relative z-10 flex flex-col justify-between p-12">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20">
+                            <Shield className="w-5 h-5 text-white" />
+                        </div>
+                        <span className="text-xl font-bold text-white tracking-tight">
+                            Verifair
+                        </span>
+                    </div>
+
+                    <div className="space-y-6 max-w-md">
+                        <h2 className="text-4xl font-bold text-white leading-tight">
+                            Detect Bias. <br />
+                            <span className="text-cyan-300">Ensure Fairness.</span>
+                        </h2>
+                        <p className="text-white/70 text-lg leading-relaxed">
+                            6 AI engines, 473M+ parameters, and 9 peer-reviewed papers — working together to find what humans miss.
+                        </p>
+
+                        <div className="flex gap-4 pt-4">
+                            {[
+                                { label: "AI Engines", value: "6" },
+                                { label: "Parameters", value: "473M+" },
+                                { label: "Bias Categories", value: "13" },
+                            ].map((stat, i) => (
+                                <div
+                                    key={i}
+                                    className="px-4 py-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10"
+                                >
+                                    <p className="text-2xl font-bold text-white">{stat.value}</p>
+                                    <p className="text-xs text-white/60">{stat.label}</p>
+                                </div>
+                            ))}
                         </div>
                     </div>
-                    <CardTitle className="text-center text-2xl text-glow">
-                        {isLogin ? "Verifair Login" : "Create Account"}
-                    </CardTitle>
-                    <p className="text-center text-slate-400 text-sm">
-                        Enter the Data Lab
+
+                    <p className="text-white/40 text-xs">
+                        &copy; {new Date().getFullYear()} Verifair. All rights reserved.
                     </p>
-                </CardHeader>
-                <CardContent>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Email</label>
-                            <input
-                                type="email"
-                                required
-                                className="w-full bg-slate-900 border border-slate-700 rounded-md p-2 text-white focus:ring-2 focus:ring-indigo-500 outline-none"
-                                value={email}
-                                onChange={e => setEmail(e.target.value)}
-                            />
+                </div>
+            </div>
+
+            {/* ─── Right: Login Form ─── */}
+            <div className="flex-1 flex items-center justify-center px-8 py-12 bg-gradient-to-br from-slate-50 to-indigo-50/30">
+                <div className="w-full max-w-md space-y-8">
+                    {/* Mobile logo */}
+                    <div className="lg:hidden flex items-center justify-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-cyan-500 flex items-center justify-center shadow-lg">
+                            <Shield className="w-5 h-5 text-white" />
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Password</label>
-                            <input
-                                type="password"
-                                required
-                                className="w-full bg-slate-900 border border-slate-700 rounded-md p-2 text-white focus:ring-2 focus:ring-indigo-500 outline-none"
-                                value={password}
-                                onChange={e => setPassword(e.target.value)}
-                            />
+                        <span className="text-xl font-bold text-slate-800 tracking-tight">
+                            Veri<span className="text-indigo-600">fair</span>
+                        </span>
+                    </div>
+
+                    {/* Header */}
+                    <div className="text-center space-y-2">
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-semibold mb-4">
+                            <Sparkles className="w-3 h-3" />
+                            AI Bias Detection Platform
+                        </div>
+                        <h1 className="text-3xl font-bold text-slate-900">
+                            {isLogin ? "Welcome back" : "Create your account"}
+                        </h1>
+                        <p className="text-slate-500 text-sm">
+                            {isLogin
+                                ? "Sign in to access your bias analysis dashboard"
+                                : "Join Verifair to start detecting hidden bias"}
+                        </p>
+                    </div>
+
+                    {/* Form */}
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        {!isLogin && (
+                            <div className="space-y-1.5">
+                                <label className="block text-sm font-semibold text-slate-700">
+                                    Full Name
+                                </label>
+                                <div className="relative">
+                                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Your name"
+                                        className="w-full pl-11 pr-4 py-3 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 outline-none transition-all"
+                                        value={fullName}
+                                        onChange={(e) => setFullName(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="space-y-1.5">
+                            <label className="block text-sm font-semibold text-slate-700">
+                                Email Address
+                            </label>
+                            <div className="relative">
+                                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                <input
+                                    type="email"
+                                    required
+                                    placeholder="you@example.com"
+                                    className="w-full pl-11 pr-4 py-3 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 outline-none transition-all"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                />
+                            </div>
                         </div>
 
-                        {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+                        <div className="space-y-1.5">
+                            <label className="block text-sm font-semibold text-slate-700">
+                                Password
+                            </label>
+                            <div className="relative">
+                                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    required
+                                    placeholder="Enter your password"
+                                    className="w-full pl-11 pr-12 py-3 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 outline-none transition-all"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className="w-4 h-4" />
+                                    ) : (
+                                        <Eye className="w-4 h-4" />
+                                    )}
+                                </button>
+                            </div>
+                        </div>
 
-                        <Button type="submit" className="w-full mt-4">
-                            {isLogin ? "Sign In" : "Register"}
-                        </Button>
+                        {error && (
+                            <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm text-center">
+                                {error}
+                            </div>
+                        )}
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full py-3.5 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-xl hover:from-indigo-700 hover:to-indigo-800 transition-all shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                            {loading ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : isLogin ? (
+                                <>
+                                    Sign In <ArrowRight className="w-4 h-4" />
+                                </>
+                            ) : (
+                                <>
+                                    Create Account <ArrowRight className="w-4 h-4" />
+                                </>
+                            )}
+                        </button>
                     </form>
 
-                    <div className="mt-6 text-center">
+                    {/* Toggle */}
+                    <div className="text-center pt-2">
                         <button
-                            onClick={() => setIsLogin(!isLogin)}
-                            className="text-sm text-indigo-400 hover:text-indigo-300 underline"
+                            onClick={() => {
+                                setIsLogin(!isLogin);
+                                setError("");
+                            }}
+                            className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
                         >
-                            {isLogin ? "Need an account? Sign up" : "Already have an account? Sign in"}
+                            {isLogin
+                                ? "Don't have an account? Sign up"
+                                : "Already have an account? Sign in"}
                         </button>
                     </div>
-                </CardContent>
-            </Card>
-        </main>
+
+                    {/* Back to landing */}
+                    <div className="text-center">
+                        <button
+                            onClick={() => router.push("/landing")}
+                            className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+                        >
+                            &larr; Back to homepage
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 }
