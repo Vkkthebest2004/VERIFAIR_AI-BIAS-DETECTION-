@@ -14,7 +14,7 @@ import {
     Mail,
     Lock,
     User,
-    Sparkles,
+
 } from "lucide-react";
 
 export default function LoginPage() {
@@ -156,10 +156,7 @@ export default function LoginPage() {
 
                     {/* Header */}
                     <div className="text-center space-y-2">
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-semibold mb-4">
-                            <Sparkles className="w-3 h-3" />
-                            Bias Audit Platform
-                        </div>
+
                         <h1 className="text-3xl font-bold text-slate-900">
                             {isLogin ? "Welcome back" : "Create your account"}
                         </h1>
