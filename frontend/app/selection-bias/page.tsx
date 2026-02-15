@@ -225,7 +225,7 @@ export default function SelectionBiasPage() {
                                     <div className={`p-4 rounded-lg border-2 ${getSeverityColor(result.severity)}`}>
                                         <p className="text-sm mb-1">Bias Severity</p>
                                         <p className="text-2xl font-bold">{result.severity}</p>
-                                        <p className="text-sm mt-1">{result.bias_score.toFixed(1)}/100</p>
+                                        <p className="text-sm mt-1">{result.bias_score?.toFixed(1) ?? 0}/100</p>
                                     </div>
                                 </div>
 
@@ -240,7 +240,7 @@ export default function SelectionBiasPage() {
                                                 </p>
                                                 {result.chi_square_test.significant && (
                                                     <p className="text-red-200 mt-1">
-                                                        Chi-square test: p = {result.chi_square_test.p_value.toFixed(4)} (significant)
+                                                        Chi-square test: p = {result.chi_square_test.p_value?.toFixed(4) ?? 'N/A'} (significant)
                                                     </p>
                                                 )}
                                             </div>
@@ -293,7 +293,7 @@ export default function SelectionBiasPage() {
                                                         <span className="text-slate-400">AIR:</span>
                                                         <span className={`font-mono font-semibold ${stats.four_fifths_violation ? 'text-red-400' : 'text-green-400'
                                                             }`}>
-                                                            {stats.adverse_impact_ratio.toFixed(2)}
+                                                            {stats.adverse_impact_ratio?.toFixed(2) ?? 'N/A'}
                                                             {stats.four_fifths_violation && ' (Violation)'}
                                                         </span>
                                                     </div>
@@ -302,7 +302,7 @@ export default function SelectionBiasPage() {
                                                         <span className={`font-mono ${(stats.demographic_parity_difference || 0) > 0.1 ? 'text-orange-400' : 'text-green-400'
                                                             }`}>
                                                             {stats.demographic_parity_difference !== undefined
-                                                                ? stats.demographic_parity_difference.toFixed(3)
+                                                                ? stats.demographic_parity_difference?.toFixed(3) ?? 'N/A'
                                                                 : 'N/A'}
                                                         </span>
                                                     </div>
@@ -311,7 +311,7 @@ export default function SelectionBiasPage() {
                                                             <span className="text-slate-400">p-value:</span>
                                                             <span className={`font-mono ${stats.p_value < 0.05 ? 'text-orange-400' : 'text-slate-400'
                                                                 }`}>
-                                                                {stats.p_value.toFixed(4)}
+                                                                {stats.p_value?.toFixed(4) ?? 'N/A'}
                                                             </span>
                                                         </div>
                                                     )}
@@ -334,13 +334,13 @@ export default function SelectionBiasPage() {
                                         <div className="grid grid-cols-2 gap-4 text-sm">
                                             <div>
                                                 <p className="text-slate-400">Test Statistic:</p>
-                                                <p className="text-white font-mono text-lg">{result.chi_square_test.statistic.toFixed(3)}</p>
+                                                <p className="text-white font-mono text-lg">{result.chi_square_test.statistic?.toFixed(3) ?? 'N/A'}</p>
                                             </div>
                                             <div>
                                                 <p className="text-slate-400">p-value:</p>
                                                 <p className={`font-mono text-lg ${result.chi_square_test.significant ? 'text-orange-400' : 'text-green-400'
                                                     }`}>
-                                                    {result.chi_square_test.p_value.toFixed(4)}
+                                                    {result.chi_square_test.p_value?.toFixed(4) ?? 'N/A'}
                                                 </p>
                                             </div>
                                             <div className="col-span-2">
