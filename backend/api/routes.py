@@ -353,7 +353,8 @@ def get_audit_detail(
 
 @router.get("/health")
 def health_check():
-    return {"status": "ok", "sentinel_loaded": sentinel is not None}
+    from backend.version import __version__
+    return {"status": "ok", "version": __version__, "sentinel_loaded": sentinel is not None}
 
 from pydantic import BaseModel
 

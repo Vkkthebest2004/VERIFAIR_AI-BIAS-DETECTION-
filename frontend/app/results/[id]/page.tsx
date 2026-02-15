@@ -613,6 +613,19 @@ export default function ResultPage() {
                 </div >
 
             </div >
+
+            {/* Footer */}
+            <footer className="mt-12 border-t border-slate-800/50 pt-6 pb-4">
+                <div className="flex items-center justify-between text-xs text-slate-600">
+                    <div className="flex items-center gap-2">
+                        <span className="text-slate-500">Verifair</span>
+                        <span className="px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400/60 border border-indigo-500/10 font-mono">
+                            v3.1.0
+                        </span>
+                    </div>
+                    <p>&copy; {new Date().getFullYear()} Verifair</p>
+                </div>
+            </footer>
         </main >
     );
 }

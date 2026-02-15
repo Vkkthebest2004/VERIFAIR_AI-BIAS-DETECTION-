@@ -277,6 +277,27 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="mt-16 border-t border-slate-800/50 pt-8 pb-6">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
+          <div className="flex items-center gap-3">
+            <span className="font-semibold text-slate-400">Verifair</span>
+            <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-xs font-mono">
+              v3.1.0
+            </span>
+          </div>
+          <p>&copy; {new Date().getFullYear()} Verifair. AI-Powered Bias Detection.</p>
+          <div className="flex items-center gap-4">
+            <a href="https://github.com/Vkkthebest2004/VERIFAIR_AI-BIAS-DETECTION-" target="_blank" rel="noopener noreferrer" className="hover:text-slate-300 transition-colors">
+              GitHub
+            </a>
+            <a href="/selection-bias" className="hover:text-slate-300 transition-colors">
+              Selection Bias
+            </a>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
