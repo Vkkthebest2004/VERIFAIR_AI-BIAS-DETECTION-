@@ -96,7 +96,7 @@ export default function SelectionBiasPage() {
 
         const token = getToken();
         if (!token) {
-            router.push('/login');
+            router.push('/landing');
             return;
         }
 
@@ -147,7 +147,7 @@ export default function SelectionBiasPage() {
                 <div className="mb-8 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <Button
-                            onClick={() => router.push('/')}
+                            onClick={() => router.push('/dashboard')}
                             className="glass-card"
                         >
                             <ArrowLeft className="w-4 h-4 mr-2" />

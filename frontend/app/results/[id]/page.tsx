@@ -115,7 +115,7 @@ export default function ResultPage() {
 
     useEffect(() => {
         if (!loading && !user) {
-            router.push("/login");
+            router.push("/landing");
             return;
         }
 
@@ -131,7 +131,7 @@ export default function ResultPage() {
             } catch (e) {
                 console.error("Failed to fetch report", e);
                 alert("Could not load report.");
-                router.push("/");
+                router.push("/dashboard");
             } finally {
                 setFetching(false);
             }

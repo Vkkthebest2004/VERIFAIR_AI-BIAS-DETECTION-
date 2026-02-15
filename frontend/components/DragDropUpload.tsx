@@ -4,8 +4,6 @@
 import React, { useCallback, useState } from 'react';
 import { UploadCloud, FileText, Loader2, Type, Plus, X, List } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Card } from './ui/card';
-import { Button } from '@/components/ui/button';
 
 interface DragDropUploadProps {
     onUpload: (files: File[], texts: string[]) => void;
@@ -38,7 +36,7 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({ onUpload, isUplo
                 f.name.endsWith('.csv') || f.name.endsWith('.txt')
             );
             if (newFiles.length > 0) {
-                setFiles(prev => [...prev, ...newFiles].slice(0, 50)); // Limit to 50 files
+                setFiles(prev => [...prev, ...newFiles].slice(0, 50));
                 setActiveTab("file");
             } else {
                 alert("Only PDF, CSV, and TXT files are supported!");
@@ -52,24 +50,18 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({ onUpload, isUplo
                 f.type === 'application/pdf' || f.type === 'text/csv' || f.type === 'text/plain' ||
                 f.name.endsWith('.csv') || f.name.endsWith('.txt')
             );
-            setFiles(prev => [...prev, ...newFiles].slice(0, 50)); // Limit to 50 files
+            setFiles(prev => [...prev, ...newFiles].slice(0, 50));
         }
     };
 
-    const removeFile = (idx: number) => {
-        setFiles(files.filter((_, i) => i !== idx));
-    }
+    const removeFile = (idx: number) => setFiles(files.filter((_, i) => i !== idx));
 
     const addTextInput = () => {
-        if (textInputs.length < 50) {
-            setTextInputs([...textInputs, '']);
-        }
+        if (textInputs.length < 50) setTextInputs([...textInputs, '']);
     };
 
     const removeTextInput = (idx: number) => {
-        if (textInputs.length > 1) {
-            setTextInputs(textInputs.filter((_, i) => i !== idx));
-        }
+        if (textInputs.length > 1) setTextInputs(textInputs.filter((_, i) => i !== idx));
     };
 
     const updateTextInput = (idx: number, value: string) => {
@@ -81,83 +73,124 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({ onUpload, isUplo
     const handleAnalyze = () => {
         const validTexts = textInputs.filter(t => t.trim().length > 0);
         onUpload(files, validTexts);
-    }
+    };
 
     const totalItems = files.length + textInputs.filter(t => t.trim()).length;
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-5">
             {/* Tabs */}
-            <div className="flex space-x-2">
-                <Button
-                    variant={activeTab === "file" ? "default" : "outline"}
+            <div className="flex gap-2">
+                <button
                     onClick={() => setActiveTab("file")}
-                    className={cn(activeTab === "file" ? "bg-indigo-600 border-transparent text-white" : "border-slate-700 text-slate-400 bg-transparent hover:bg-slate-800")}
+                    className={cn(
+                        "flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all",
+                        activeTab === "file"
+                            ? "text-white shadow-lg shadow-indigo-500/20"
+                            : "hover:opacity-80"
+                    )}
+                    style={{
+                        background: activeTab === "file" ? "var(--btn-primary-bg)" : "var(--bg-card-hover)",
+                        border: `1px solid ${activeTab === "file" ? "transparent" : "var(--border-secondary)"}`,
+                        color: activeTab === "file" ? "white" : "var(--text-secondary)",
+                    }}
                 >
-                    <UploadCloud className="w-4 h-4 mr-2" /> Upload Files
-                    {files.length > 0 && <span className="ml-2 px-1.5 py-0.5 text-xs bg-white/20 rounded">{files.length}</span>}
-                </Button>
-                <Button
-                    variant={activeTab === "text" ? "default" : "outline"}
+                    <UploadCloud className="w-4 h-4" /> Upload Files
+                    {files.length > 0 && (
+                        <span className="ml-1 px-1.5 py-0.5 text-[11px] rounded-md bg-white/20">{files.length}</span>
+                    )}
+                </button>
+                <button
                     onClick={() => setActiveTab("text")}
-                    className={cn(activeTab === "text" ? "bg-indigo-600 border-transparent text-white" : "border-slate-700 text-slate-400 bg-transparent hover:bg-slate-800")}
+                    className={cn(
+                        "flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all",
+                        activeTab === "text"
+                            ? "text-white shadow-lg shadow-indigo-500/20"
+                            : "hover:opacity-80"
+                    )}
+                    style={{
+                        background: activeTab === "text" ? "var(--btn-primary-bg)" : "var(--bg-card-hover)",
+                        border: `1px solid ${activeTab === "text" ? "transparent" : "var(--border-secondary)"}`,
+                        color: activeTab === "text" ? "white" : "var(--text-secondary)",
+                    }}
                 >
-                    <Type className="w-4 h-4 mr-2" /> Multiple Texts
-                    {textInputs.filter(t => t.trim()).length > 0 && <span className="ml-2 px-1.5 py-0.5 text-xs bg-white/20 rounded">{textInputs.filter(t => t.trim()).length}</span>}
-                </Button>
+                    <Type className="w-4 h-4" /> Multiple Texts
+                    {textInputs.filter(t => t.trim()).length > 0 && (
+                        <span className="ml-1 px-1.5 py-0.5 text-[11px] rounded-md bg-white/20">{textInputs.filter(t => t.trim()).length}</span>
+                    )}
+                </button>
             </div>
 
+            {/* File Upload */}
             {activeTab === "file" && (
-                <Card
+                <div
                     className={cn(
-                        "relative flex flex-col items-center justify-center w-full min-h-[200px] border-2 border-dashed rounded-xl transition-all cursor-pointer group overflow-hidden p-6",
-                        isDragging ? "border-indigo-500 bg-indigo-500/10" : "border-slate-700 hover:border-slate-500 hover:bg-slate-800/50",
-                        "glass-panel"
+                        "relative flex flex-col items-center justify-center w-full min-h-[200px] border-2 border-dashed rounded-2xl transition-all cursor-pointer group overflow-hidden p-6",
                     )}
+                    style={{
+                        borderColor: isDragging ? "var(--drag-border-active)" : "var(--drag-border)",
+                        background: isDragging ? "var(--drag-bg-active)" : "transparent",
+                    }}
                     onDragEnter={handleDrag}
                     onDragLeave={handleDrag}
                     onDragOver={handleDrag}
                     onDrop={handleDrop}
                 >
-                    <input
-                        id="file-upload"
-                        type="file"
-                        className="hidden"
-                        accept=".pdf,.csv,.txt"
-                        multiple
-                        onChange={handleFileChange}
-                    />
+                    <input id="file-upload" type="file" className="hidden" accept=".pdf,.csv,.txt" multiple onChange={handleFileChange} />
 
                     <div className="flex flex-col items-center w-full" onClick={(e) => {
-                        // Prevent click when removing individual files
                         if ((e.target as HTMLElement).closest('.remove-btn')) return;
                         document.getElementById('file-upload')?.click();
                     }}>
                         {files.length === 0 ? (
                             <>
-                                <UploadCloud className="w-12 h-12 text-slate-500 mb-4 group-hover:text-indigo-400 transition-colors" />
-                                <p className="text-lg font-medium text-slate-300">Drop PDFs or CSVs here</p>
-                                <p className="text-sm text-slate-500 mt-2">or click to browse (up to 50 files)</p>
+                                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
+                                    style={{ background: "var(--accent-glow)" }}>
+                                    <UploadCloud className="w-8 h-8" style={{ color: "var(--accent-primary)" }} />
+                                </div>
+                                <p className="text-lg font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
+                                    Drop files here
+                                </p>
+                                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                                    PDF, CSV, or TXT files — up to 50
+                                </p>
                             </>
                         ) : (
                             <div className="w-full space-y-2">
-                                <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-700/50">
-                                    <span className="text-sm text-slate-400 flex items-center">
-                                        <List className="w-4 h-4 mr-2" />
+                                <div className="flex items-center justify-between mb-3 pb-3"
+                                    style={{ borderBottom: "1px solid var(--border-secondary)" }}>
+                                    <span className="text-sm font-medium flex items-center gap-2" style={{ color: "var(--text-secondary)" }}>
+                                        <List className="w-4 h-4" />
                                         {files.length} file{files.length !== 1 ? 's' : ''} selected
                                     </span>
-                                    <span className="text-xs text-slate-600">{50 - files.length} remaining</span>
+                                    <span className="text-xs" style={{ color: "var(--text-muted)" }}>{50 - files.length} remaining</span>
                                 </div>
                                 <div className="max-h-[300px] overflow-y-auto space-y-2 pr-2">
                                     {files.map((f, i) => (
-                                        <div key={i} className="flex items-center justify-between bg-slate-800/80 p-3 rounded border border-slate-700">
-                                            <div className="flex items-center truncate">
-                                                <FileText className="w-5 h-5 text-indigo-400 mr-3 flex-shrink-0" />
-                                                <span className="text-sm text-slate-200 truncate max-w-[200px]">{f.name}</span>
+                                        <div key={i} className="flex items-center justify-between p-3 rounded-xl transition-all"
+                                            style={{
+                                                background: "var(--file-item-bg)",
+                                                border: "1px solid var(--file-item-border)",
+                                            }}>
+                                            <div className="flex items-center truncate gap-3">
+                                                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                                                    style={{ background: "var(--accent-glow)" }}>
+                                                    <FileText className="w-4 h-4" style={{ color: "var(--accent-primary)" }} />
+                                                </div>
+                                                <span className="text-sm font-medium truncate max-w-[200px]" style={{ color: "var(--text-primary)" }}>{f.name}</span>
                                             </div>
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); removeFile(i); }}
-                                                className="remove-btn text-slate-500 hover:text-red-400 text-xs px-2 py-1"
+                                                className="remove-btn text-xs px-2.5 py-1 rounded-lg font-medium transition-all hover:scale-105"
+                                                style={{ color: "var(--text-muted)" }}
+                                                onMouseEnter={e => {
+                                                    e.currentTarget.style.color = "#ef4444";
+                                                    e.currentTarget.style.background = "rgba(239,68,68,0.1)";
+                                                }}
+                                                onMouseLeave={e => {
+                                                    e.currentTarget.style.color = "var(--text-muted)";
+                                                    e.currentTarget.style.background = "transparent";
+                                                }}
                                             >
                                                 Remove
                                             </button>
@@ -165,34 +198,47 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({ onUpload, isUplo
                                     ))}
                                 </div>
                                 {files.length < 50 && (
-                                    <p className="text-xs text-center text-slate-500 mt-4 pt-2 border-t border-slate-700/50">Click area to add more</p>
+                                    <p className="text-xs text-center mt-4 pt-3" style={{ color: "var(--text-muted)", borderTop: "1px solid var(--border-secondary)" }}>
+                                        Click area to add more files
+                                    </p>
                                 )}
                             </div>
                         )}
                     </div>
-                </Card>
+                </div>
             )}
 
+            {/* Text Input */}
             {activeTab === "text" && (
                 <div className="space-y-3">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-slate-400 flex items-center">
-                            <List className="w-4 h-4 mr-2" />
+                        <span className="text-sm font-medium flex items-center gap-2" style={{ color: "var(--text-secondary)" }}>
+                            <List className="w-4 h-4" />
                             {textInputs.filter(t => t.trim()).length} text{textInputs.filter(t => t.trim()).length !== 1 ? 's' : ''} entered
                         </span>
-                        <span className="text-xs text-slate-600">{50 - textInputs.length} remaining</span>
+                        <span className="text-xs" style={{ color: "var(--text-muted)" }}>{50 - textInputs.length} remaining</span>
                     </div>
 
                     <div className="max-h-[400px] overflow-y-auto space-y-3 pr-2">
                         {textInputs.map((text, idx) => (
                             <div key={idx} className="relative group">
-                                <div className="flex items-start gap-2">
-                                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-xs text-indigo-400 font-mono mt-2">
+                                <div className="flex items-start gap-3">
+                                    <div className="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold mt-2"
+                                        style={{
+                                            background: "var(--accent-glow)",
+                                            color: "var(--accent-primary)",
+                                            border: "1px solid var(--accent-glow)",
+                                        }}>
                                         {idx + 1}
                                     </div>
                                     <div className="flex-1">
                                         <textarea
-                                            className="w-full h-[100px] p-3 bg-slate-900/50 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-200 resize-none glass-panel placeholder:text-slate-600 text-sm"
+                                            className="w-full h-[100px] p-4 rounded-xl outline-none resize-none text-sm transition-all"
+                                            style={{
+                                                background: "var(--textarea-bg)",
+                                                border: "1px solid var(--border-secondary)",
+                                                color: "var(--text-primary)",
+                                            }}
                                             placeholder={`Text ${idx + 1}: Paste content here (e.g., job description, email, article)...`}
                                             value={text}
                                             onChange={(e) => updateTextInput(idx, e.target.value)}
@@ -201,7 +247,12 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({ onUpload, isUplo
                                     {textInputs.length > 1 && (
                                         <button
                                             onClick={() => removeTextInput(idx)}
-                                            className="flex-shrink-0 w-8 h-8 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 hover:bg-red-500/20 transition-colors mt-2"
+                                            className="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-all hover:scale-105 mt-2"
+                                            style={{
+                                                background: "rgba(239,68,68,0.1)",
+                                                border: "1px solid rgba(239,68,68,0.2)",
+                                                color: "#ef4444",
+                                            }}
                                             title="Remove this text"
                                         >
                                             <X className="w-4 h-4" />
@@ -213,34 +264,55 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({ onUpload, isUplo
                     </div>
 
                     {textInputs.length < 50 && (
-                        <Button
+                        <button
                             onClick={addTextInput}
-                            variant="outline"
-                            className="w-full border-dashed border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-indigo-400 hover:border-indigo-500/50"
+                            className="w-full py-3 rounded-xl border-2 border-dashed text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                            style={{
+                                borderColor: "var(--drag-border)",
+                                color: "var(--text-muted)",
+                            }}
+                            onMouseEnter={e => {
+                                e.currentTarget.style.borderColor = "var(--accent-primary)";
+                                e.currentTarget.style.color = "var(--accent-primary)";
+                                e.currentTarget.style.background = "var(--accent-glow)";
+                            }}
+                            onMouseLeave={e => {
+                                e.currentTarget.style.borderColor = "var(--drag-border)";
+                                e.currentTarget.style.color = "var(--text-muted)";
+                                e.currentTarget.style.background = "transparent";
+                            }}
                         >
-                            <Plus className="w-4 h-4 mr-2" /> Add Another Text (Max 50)
-                        </Button>
+                            <Plus className="w-4 h-4" /> Add Another Text (Max 50)
+                        </button>
                     )}
                 </div>
             )}
 
-            <div className="flex items-center justify-between p-4 bg-slate-900/50 rounded-xl border border-slate-700/50">
-                <div className="text-sm text-slate-400">
-                    <span className="font-semibold text-white">{totalItems}</span> item{totalItems !== 1 ? 's' : ''} ready for analysis
+            {/* Status Bar + Analyze */}
+            <div className="flex items-center justify-between p-4 rounded-2xl"
+                style={{
+                    background: "var(--status-bar-bg)",
+                    border: "1px solid var(--status-bar-border)",
+                }}>
+                <div className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                    <span className="font-bold" style={{ color: "var(--text-primary)" }}>{totalItems}</span> item{totalItems !== 1 ? 's' : ''} ready for analysis
                 </div>
-                <Button
+                <button
                     onClick={handleAnalyze}
                     disabled={isUploading || totalItems === 0}
-                    className="h-12 px-8 text-lg bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 border-0 shadow-lg shadow-indigo-500/20"
+                    className="h-12 px-8 text-sm font-bold rounded-xl text-white transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    style={{
+                        background: "var(--btn-primary-bg)",
+                        boxShadow: "0 4px 15px -3px rgba(79, 70, 229, 0.4)",
+                    }}
                 >
                     {isUploading ? (
-                        <span className="flex items-center">
-                            <Loader2 className="w-5 h-5 mr-2 animate-spin" /> Analyzing {totalItems} Item{totalItems !== 1 ? 's' : ''}...
+                        <span className="flex items-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin" /> Analyzing {totalItems} Item{totalItems !== 1 ? 's' : ''}...
                         </span>
                     ) : `Run Bias Audit on ${totalItems} Item${totalItems !== 1 ? 's' : ''}`}
-                </Button>
+                </button>
             </div>
         </div>
     );
 };
-

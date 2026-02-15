@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth";
 import { ThemeProvider } from "@/lib/theme";
+import { PageTransition } from "@/components/PageTransition";
 
 export const metadata: Metadata = {
   title: "Verifair | AI-Powered Bias Detection Platform",
@@ -20,7 +21,7 @@ export default function RootLayout({
       <body className="antialiased">
         <ThemeProvider>
           <AuthProvider>
-            {children}
+            <PageTransition>{children}</PageTransition>
           </AuthProvider>
         </ThemeProvider>
       </body>
