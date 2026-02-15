@@ -144,7 +144,7 @@ export const HateSpeechPanel: React.FC<HateSpeechPanelProps> = ({ data }) => {
                     <div>
                         <h4 className={`text-sm font-bold uppercase tracking-wider
               ${data.hate_detected ? 'text-red-300' : 'text-green-300'}`}>
-                            Deep Hate Speech Detection
+                            Neural Ensemble Hate Speech Detection
                         </h4>
                         <p className="text-[10px] text-slate-500 mt-0.5">
                             3-Layer Ensemble: Dynabench · ToxiGen · Lexicon+Embedding

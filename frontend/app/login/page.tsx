@@ -115,12 +115,12 @@ export default function LoginPage() {
                             <span className="text-cyan-300">Ensure Fairness.</span>
                         </h2>
                         <p className="text-white/70 text-lg leading-relaxed">
-                            6 AI engines, 473M+ parameters, and 9 peer-reviewed papers — working together to find what humans miss.
+                            6 Analysis Modules, 473M+ parameters, and 9 peer-reviewed papers — working together to find what humans miss.
                         </p>
 
                         <div className="flex gap-4 pt-4">
                             {[
-                                { label: "AI Engines", value: "6" },
+                                { label: "Neural Modules", value: "6" },
                                 { label: "Parameters", value: "473M+" },
                                 { label: "Bias Categories", value: "13" },
                             ].map((stat, i) => (
@@ -158,7 +158,7 @@ export default function LoginPage() {
                     <div className="text-center space-y-2">
                         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-semibold mb-4">
                             <Sparkles className="w-3 h-3" />
-                            AI Bias Detection Platform
+                            Bias Audit Platform
                         </div>
                         <h1 className="text-3xl font-bold text-slate-900">
                             {isLogin ? "Welcome back" : "Create your account"}

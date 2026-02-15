@@ -90,7 +90,7 @@ export default function LandingPage() {
                         <div className="animate-fade-in-up delay-1">
                             <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-semibold">
                                 <Sparkles className="w-4 h-4" />
-                                AI-Powered Bias Detection
+                                Bias Audit Engine
                             </span>
                         </div>
 
@@ -100,7 +100,7 @@ export default function LandingPage() {
                         </h1>
 
                         <p className="animate-fade-in-up delay-3 text-lg text-slate-600 max-w-xl leading-relaxed">
-                            Verifair scans documents and text for hidden biases using <strong>6 research-backed AI engines</strong>,
+                            Verifair scans documents and text for hidden biases using <strong>6 research-backed analysis modules</strong>,
                             covering hate speech, stereotypes, and differential treatment — then explains findings in plain English.
                         </p>
 
@@ -128,7 +128,7 @@ export default function LandingPage() {
                             </div>
                             <div className="flex items-center gap-2">
                                 <Brain className="w-4 h-4 text-indigo-500" />
-                                <span>473M+ AI Parameters</span>
+                                <span>473M+ Model Parameters</span>
                             </div>
                         </div>
                     </div>
@@ -138,7 +138,7 @@ export default function LandingPage() {
                         <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-slate-300/50 border border-slate-200/60">
                             <Image
                                 src="/landing-hero.jpg"
-                                alt="Verifair AI Bias Detection - Understanding cognitive biases"
+                                alt="Verifair Bias Audit - Understanding cognitive biases"
                                 width={800}
                                 height={450}
                                 className="w-full h-auto animate-float"
@@ -149,8 +149,8 @@ export default function LandingPage() {
                         </div>
                         {/* Floating stat badges */}
                         <div className="absolute -bottom-4 -left-4 px-5 py-3 bg-white rounded-2xl border border-slate-200 shadow-xl animate-float" style={{ animationDelay: "1s" }}>
-                            <p className="text-xs text-slate-500 font-medium">Analysis Engine</p>
-                            <p className="text-lg font-bold text-indigo-700">6 Layers</p>
+                            <p className="text-xs text-slate-500 font-medium">Analysis Pipeline</p>
+                            <p className="text-lg font-bold text-indigo-700">6 Stages</p>
                         </div>
                         <div className="absolute -top-4 -right-4 px-5 py-3 bg-white rounded-2xl border border-slate-200 shadow-xl animate-float" style={{ animationDelay: "2s" }}>
                             <p className="text-xs text-slate-500 font-medium">Stereotype Categories</p>
@@ -261,14 +261,14 @@ export default function LandingPage() {
                             {
                                 step: "02",
                                 title: "Analyze",
-                                desc: "Our 6-engine pipeline processes every sentence with 4 neural models and statistical tests.",
+                                desc: "Our 6-stage pipeline processes every sentence with 4 neural models and statistical tests.",
                                 color: "text-violet-600",
                                 bg: "bg-violet-50",
                             },
                             {
                                 step: "03",
                                 title: "Understand",
-                                desc: "Interactive dashboards with charts, severity scores, and AI-generated plain English explanations.",
+                                desc: "Interactive dashboards with charts, severity scores, and Generative Contextual Explanations.",
                                 color: "text-cyan-600",
                                 bg: "bg-cyan-50",
                             },
@@ -289,7 +289,7 @@ export default function LandingPage() {
             <section id="tech" className="py-24 px-6 bg-white">
                 <div className="max-w-5xl mx-auto">
                     <div className="text-center mb-16">
-                        <h2 className="text-4xl font-bold text-slate-900 mb-4">Built With Research-Grade AI</h2>
+                        <h2 className="text-4xl font-bold text-slate-900 mb-4">Built With State-of-the-Art NLP Architectures</h2>
                         <p className="text-lg text-slate-500 max-w-2xl mx-auto">
                             473 million+ model parameters, 9 peer-reviewed papers, zero cloud dependencies.
                         </p>
@@ -301,7 +301,7 @@ export default function LandingPage() {
                             { name: "toxic-bert", label: "Toxicity", params: "110M" },
                             { name: "Dynabench RoBERTa", label: "Hate Speech", params: "125M" },
                             { name: "ToxiGen RoBERTa", label: "Implicit Hate", params: "125M" },
-                            { name: "Llama 3.2", label: "Explanations", params: "3B" },
+                            { name: "Llama 3.2", label: "Contextual Analysis", params: "3B" },
                             { name: "FastAPI", label: "Backend", params: "Python" },
                             { name: "Next.js 16", label: "Frontend", params: "React" },
                             { name: "Fairlearn", label: "Fairness Metrics", params: "Microsoft" },
@@ -349,10 +349,10 @@ export default function LandingPage() {
                         </div>
                         <span className="font-bold text-slate-700">Verifair</span>
                         <span className="px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 border border-indigo-100 text-xs font-mono">
-                            v3.1.0
+                            v3.2.0
                         </span>
                     </div>
-                    <p>&copy; {new Date().getFullYear()} Verifair. AI-Powered Bias Detection.</p>
+                    <p>&copy; {new Date().getFullYear()} Verifair. Bias Audit System.</p>
                     <a
                         href="https://github.com/Vkkthebest2004/VERIFAIR_AI-BIAS-DETECTION-"
                         target="_blank"

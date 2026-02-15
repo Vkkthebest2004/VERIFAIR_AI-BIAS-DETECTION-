@@ -38,10 +38,13 @@ def convert_numpy(obj):
         return bool(obj)
     elif isinstance(obj, (np.integer,)):
         return int(obj)
-    elif isinstance(obj, (np.floating,)):
+    elif isinstance(obj, (np.floating, float)):
+        # Handle NaN and Infinity which are not valid JSON
+        if np.isnan(obj) or np.isinf(obj):
+            return None
         return float(obj)
     elif isinstance(obj, np.ndarray):
-        return obj.tolist()
+        return [convert_numpy(i) for i in obj.tolist()]
     return obj
 
 # Initialize Sentinel
@@ -349,7 +352,14 @@ def get_audit_detail(
     if not record:
         raise HTTPException(status_code=404, detail="Audit record not found.")
         
-    return record.full_report_json
+    # Merge DB metadata with the JSON report to ensure fields like filename exist
+    response = record.full_report_json or {}
+    response["record_id"] = record.id
+    response["filename"] = record.filename
+    response["total_sentences_analyzed"] = record.total_sentences
+    response["bias_flags_count"] = record.bias_flags_count
+    
+    return response
 
 @router.get("/health")
 def health_check():

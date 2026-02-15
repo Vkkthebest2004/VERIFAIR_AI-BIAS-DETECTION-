@@ -18,7 +18,8 @@ interface AuditHistoryItem {
     filename: string;
     total_sentences: number;
     bias_flags_count: number;
-    created_at: string;
+    created_at?: string;  // Optional, for backward compatibility if needed
+    upload_date: string;
 }
 
 export default function DashboardPage() {
@@ -138,7 +139,7 @@ export default function DashboardPage() {
                                 Veri<span style={{ color: "var(--accent-primary)" }}>fair</span>
                             </h1>
                             <p className="text-[11px] font-medium" style={{ color: "var(--text-muted)" }}>
-                                AI Bias Detection
+                                Algorithmic Bias Audit
                             </p>
                         </div>
                     </div>
@@ -227,7 +228,7 @@ export default function DashboardPage() {
                                 Welcome back, {user.full_name || user.email?.split("@")[0]}
                             </h2>
                             <p className="text-indigo-200/80 max-w-md">
-                                Upload documents or paste text to analyze for hidden bias patterns using 6 AI engines.
+                                Upload documents or paste text to analyze for hidden bias patterns using 6-stage statistical & neural analysis.
                             </p>
                         </div>
 
@@ -312,7 +313,7 @@ export default function DashboardPage() {
                                                             {idx + 1}
                                                         </div>
                                                         <span className="text-xs font-mono" style={{ color: "var(--text-muted)" }}>
-                                                            {item.created_at ? new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                                                            {item.upload_date ? new Date(item.upload_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : (item.created_at ? new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '')}
                                                         </span>
                                                     </div>
                                                     <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity" style={{ color: "var(--text-muted)" }} />
@@ -435,10 +436,10 @@ export default function DashboardPage() {
                                 className="px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold"
                                 style={{ background: "var(--accent-glow)", color: "var(--accent-primary)" }}
                             >
-                                v3.1.0
+                                v3.2.0
                             </span>
                         </div>
-                        <p className="text-xs">&copy; {new Date().getFullYear()} Verifair. AI-Powered Bias Detection.</p>
+                        <p className="text-xs">&copy; {new Date().getFullYear()} Verifair. Bias Audit System.</p>
                         <div className="flex items-center gap-4 text-xs">
                             <a
                                 href="https://github.com/Vkkthebest2004/VERIFAIR_AI-BIAS-DETECTION-"

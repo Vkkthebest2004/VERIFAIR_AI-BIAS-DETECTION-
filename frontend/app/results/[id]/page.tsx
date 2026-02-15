@@ -83,6 +83,9 @@ interface AnalysisResult {
 }
 
 // The backend "history detail" endpoint returns the full_report_json which matches this structure
+import { SelectionBiasReport, SelectionBiasResult } from '@/components/SelectionBiasReport';
+
+// The backend "history detail" endpoint returns the full_report_json which matches this structure
 interface FullReport {
     record_id: number;
     filename: string;
@@ -103,6 +106,9 @@ interface FullReport {
             hate_types_found: string[];
         };
     };
+    // For selection bias reports
+    type?: "selection_bias";
+    analysis?: SelectionBiasResult;
 }
 
 export default function ResultPage() {
@@ -144,7 +150,7 @@ export default function ResultPage() {
     }, [id, user, loading, getToken, router]);
 
     const getRadarData = () => {
-        if (!report) return [];
+        if (!report || !report.results) return [];
 
         const scores: Record<string, number> = {};
 
@@ -164,7 +170,7 @@ export default function ResultPage() {
     };
 
     const getTopicData = () => {
-        if (!report) return [];
+        if (!report || !report.results) return [];
         const counts: Record<string, number> = {};
         report.results.forEach(res => {
             res.topics.forEach(t => {
@@ -174,11 +180,11 @@ export default function ResultPage() {
         return Object.keys(counts).map(k => ({ name: k, value: counts[k] }));
     };
 
-    const avgQualityScore = report ? (
+    const avgQualityScore = report && report.results ? (
         report.results.reduce((acc, curr) => acc + (curr.quality_score || 0), 0) / (report.results.length || 1)
     ) : 0;
 
-    const filteredResults = report?.results.filter(r =>
+    const filteredResults = report?.results?.filter(r =>
         r.bias_flags.some(f => f.z_score >= sensitivity) ||
         r.hate_speech_analysis?.hate_detected ||
         r.stereotype_analysis?.has_stereotype ||
@@ -186,18 +192,18 @@ export default function ResultPage() {
     ) || [];
 
     // Aggregate hate speech stats across all chunks
-    const hateChunks = report?.results.filter(r => r.hate_speech_analysis?.hate_detected) || [];
+    const hateChunks = report?.results?.filter(r => r.hate_speech_analysis?.hate_detected) || [];
     const totalHateDetected = hateChunks.length;
-    const maxHateScore = report?.results.reduce((max, r) => {
+    const maxHateScore = report?.results?.reduce((max, r) => {
         const score = r.hate_speech_analysis?.ensemble_score || 0;
         return score > max ? score : max;
     }, 0) || 0;
-    const worstSeverity = report?.results.reduce((worst, r) => {
+    const worstSeverity = report?.results?.reduce((worst, r) => {
         const sev = r.hate_speech_analysis?.severity || 'None';
         const order: Record<string, number> = { 'Critical': 4, 'High': 3, 'Medium': 2, 'Low': 1, 'None': 0 };
         return (order[sev] || 0) > (order[worst] || 0) ? sev : worst;
     }, 'None') || 'None';
-    const allHateTypes = [...new Set(report?.results.flatMap(r => r.hate_speech_analysis?.hate_types || []) || [])];
+    const allHateTypes = [...new Set(report?.results?.flatMap(r => r.hate_speech_analysis?.hate_types || []) || [])];
 
     if (fetching || loading) {
         return (
@@ -209,6 +215,32 @@ export default function ResultPage() {
     }
 
     if (!report) return null;
+
+    // --- HANDLE SELECTION BIAS REPORTS ---
+    if (report.type === "selection_bias" && report.analysis) {
+        return (
+            <main className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8 font-sans">
+                <header className="max-w-7xl mx-auto mb-8 flex justify-between items-center">
+                    <div className="flex items-center">
+                        <Button variant="ghost" onClick={() => router.back()} className="mr-4 text-slate-400 hover:text-white">
+                            <ArrowLeft className="w-5 h-5 mr-2" /> Back
+                        </Button>
+                        <div>
+                            <h1 className="text-2xl font-bold text-white">Selection Bias Analysis</h1>
+                            <p className="text-slate-400 text-sm flex items-center">
+                                <Activity className="w-3 h-3 mr-1 text-indigo-400" />
+                                {report.filename}
+                            </p>
+                        </div>
+                    </div>
+                </header>
+
+                <div className="max-w-7xl mx-auto">
+                    <SelectionBiasReport data={report.analysis} />
+                </div>
+            </main>
+        );
+    }
 
     return (
         <main className="min-h-screen bg-slate-950 text-slate-100 p-8 font-sans selection:bg-indigo-500/30">
@@ -499,7 +531,7 @@ export default function ResultPage() {
                                         {/* AI Explanation Section */}
                                         {res.explanation && (
                                             <div className="mt-4 p-3 bg-indigo-900/20 border-l-2 border-indigo-500 rounded-r text-sm text-slate-300">
-                                                <p className="font-semibold text-indigo-300 text-xs uppercase tracking-wide mb-1">AI Explanation (Llama 3.2)</p>
+                                                <p className="font-semibold text-indigo-300 text-xs uppercase tracking-wide mb-1">Contextual Analysis (Llama 3.2)</p>
                                                 {res.explanation}
                                             </div>
                                         )}
@@ -621,7 +653,7 @@ export default function ResultPage() {
                     <div className="flex items-center gap-2">
                         <span className="text-slate-500">Verifair</span>
                         <span className="px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400/60 border border-indigo-500/10 font-mono">
-                            v3.1.0
+                            v3.2.0
                         </span>
                     </div>
                     <p>&copy; {new Date().getFullYear()} Verifair</p>
