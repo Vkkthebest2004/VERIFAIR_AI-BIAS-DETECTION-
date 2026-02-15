@@ -11,13 +11,14 @@
 3. [How It Works — The Big Picture](#3-how-it-works--the-big-picture)
 4. [Architecture Overview](#4-architecture-overview)
 5. [The 6 Core Analysis Engines](#5-the-6-core-analysis-engines)
-6. [Technology Stack — What We Used and Why](#6-technology-stack--what-we-used-and-why)
-7. [Key Features](#7-key-features)
-8. [Data Flow — Step by Step](#8-data-flow--step-by-step)
-9. [API Endpoints](#9-api-endpoints)
-10. [Research Papers Behind Our Work](#10-research-papers-behind-our-work)
-11. [How to Run It](#11-how-to-run-it)
-12. [Sample Demo Script](#12-sample-demo-script)
+6. [Mathematical Foundation](#6-mathematical-foundation)
+7. [Technology Stack — What We Used and Why](#7-technology-stack--what-we-used-and-why)
+8. [Key Features](#8-key-features)
+9. [Data Flow — Step by Step](#9-data-flow--step-by-step)
+10. [API Endpoints](#10-api-endpoints)
+11. [Research Papers Behind Our Work](#11-research-papers-behind-our-work)
+12. [How to Run It](#12-how-to-run-it)
+13. [Sample Demo Script](#13-sample-demo-script)
 
 ---
 
@@ -128,32 +129,22 @@ This is where the actual AI magic happens. Each engine runs independently on eve
 
 **How it works:**
 1. The text is converted to a 768-dimensional vector using `all-mpnet-base-v2` (a sentence-transformer model).
-2. We pre-compute embeddings for 13 identity terms: Male, Female, Non-binary, Asian, Black, White, Hispanic, Muslim, Christian, Jewish, LGBTQ, Disabled, Elderly.
+2. We pre-compute embeddings for 13 identity terms (Male, Female, LGBTQ, etc.).
 3. We calculate the **cosine similarity** between the text and each identity.
-4. We compute the **Z-score** — how many standard deviations the similarity is from the mean. A Z-score above 2.0 means the text is statistically disproportionately associated with that identity.
-5. We also compute **Cohen's d** (effect size) and **Hedges' g** (small-sample-corrected effect size) for robustness.
+4. We compute the **Z-score** — how many standard deviations the similarity is from the mean of neutral text.
+5. We also compute **Cohen's d** (effect size) for robustness.
 
 **Example:** The text *"Women are too emotional for leadership"* would have a very high cosine similarity with "Female" and a high Z-score, flagging it as biased.
-
-**Threshold:** Z-score > 2.0 triggers a flag (configurable with a sensitivity slider on the UI).
 
 ### Engine 2: WEAT / SEAT Tests
 
 **What it does:** Measures if a text has a positive or negative emotional association using a standard psychology test adapted for AI.
 
 **How it works:**
-1. Based on the **WEAT** (Word Embedding Association Test) by Caliskan et al. (2017) and **SEAT** (Sentence Embedding Association Test) by May et al. (2019).
-2. We define two word lists:
-   - **Pleasant words:** love, happy, wonderful, joy, beautiful, etc.
-   - **Unpleasant words:** hate, ugly, terrible, horrible, evil, etc.
-3. For each text chunk, we calculate its average cosine similarity with both lists.
-4. The **SEAT score** = mean(pleasant similarity) - mean(unpleasant similarity).
-   - Positive score → text has pleasant associations
-   - Negative score → text has unpleasant associations
-   - Near zero → neutral
-5. We compute a **p-value** using Welch's t-test to determine statistical significance.
-
-**Example:** *"These people are dangerous criminals"* would have a negative SEAT score (unpleasant association).
+1. Based on the **WEAT** (Word Embedding Association Test) by Caliskan et al. (2017).
+2. We define two word lists: **Pleasant** (love, joy) vs. **Unpleasant** (hate, evil).
+3. We calculate the differential association of the text with these two lists.
+4. **Positive score** = Pleasant association; **Negative score** = Unpleasant association.
 
 ### Engine 3: Stereotype Detection (13 Categories)
 
@@ -162,81 +153,91 @@ This is where the actual AI magic happens. Each engine runs independently on eve
 **How it works (two-dimensional):**
 
 **Dimension 1 — Neural Toxicity (toxic-bert):**
-The text is run through `unitary/toxic-bert`, a model trained on 160K Wikipedia comments labeled for toxicity, identity hate, insult, and threat. If the identity_hate score > 0.1 or insult score > 0.3, it flags as "Explicit Identity Bias."
+Checks for toxicity, identity hate, insults, and threats using a BERT model.
 
 **Dimension 2 — Embedding Similarity:**
-We have pre-defined concept clusters for 13 stereotype categories:
-- Gender Occupation Stereotypes (nurse = female, engineer = male)
-- Gender Trait Stereotypes (emotional = female, rational = male)
-- Gender Behavior Stereotypes (leads = male, supports = female)
-- Race Competence Stereotypes ("naturally good at math", "lazy", "criminal")
-- Race Cultural Stereotypes ("exotic", "primitive", "model minority")
-- Age Competence Stereotypes ("slow", "outdated", "entitled")
-- Age Capability Stereotypes ("past their prime", "too young")
-- Religion Behavior Stereotypes ("extremist", "fundamentalist")
-- Disability Capability Stereotypes ("burden", "helpless", "incapable")
-- LGBTQ Behavior Stereotypes ("flamboyant", "confused", "abnormal")
-- Socioeconomic Stereotypes ("lazy", "privileged", "elitist")
-- Intersectional Stereotypes ("angry black woman", "tiger mom", "welfare queen")
-- Positive Stereotypes — still harmful ("naturally athletic", "naturally musical")
+Compares text against 13 stereotype concept clusters (e.g., "Gender Occupation", "Race Competence", "Age Capability").
 
-The text embedding is compared to each category's concept embeddings via cosine similarity. If similarity > 0.35, the category is flagged.
-
-**Composite Score:** Each category has a severity weight (0.6 to 1.0). If the text mentions specific identity words (e.g., "women"), a 1.5x multiplier is applied. The final score ranges from 0-100.
+**Composite Score:** Combines toxicity, embedding similarity, and severity weights (0.6 to 1.0) into a final 0-100 score.
 
 ### Engine 4: Hate Speech Detection (3-Layer Ensemble)
 
-**What it does:** Detects explicit, implicit, and coded hate speech using three independent neural models plus a curated lexicon.
+**What it does:** Detects explicit, implicit, and coded hate speech using three independent neural models.
 
 **The 3 Layers:**
+1. **Dynabench RoBERTa:** Explicit hate speech.
+2. **ToxiGen RoBERTa:** Implicit/coded hate (higher weight).
+3. **Lexicon & Embeddings:** Slurs, dehumanization, symbols.
 
-| Layer | Model | What It Catches | Research Basis |
-|-------|-------|----------------|---------------|
-| Layer 1 | `facebook/roberta-hate-speech-dynabench-r4-target` | Explicit hate speech | Vidgen et al. (ACL 2021) — adversarially collected over 4 rounds |
-| Layer 2 | `tomh/toxigen_roberta` | Implicit/coded hate, dog-whistles | Hartvigsen et al. (ACL 2022) — 274K statements, 13 minority groups |
-| Layer 3 | Curated Lexicon + Embedding Proximity | Slurs, dehumanization, coded language | Hatebase.org, ADL Hate Symbol Database, SPLC terminology |
-
-**Ensemble Scoring:**
-```
-final_score = 0.35 * dynabench_score + 0.40 * toxigen_score + 0.25 * lexicon_score
-```
-ToxiGen gets the highest weight (0.40) because implicit hate is harder to detect and more dangerous.
-
-**Severity Levels:**
-| Score Range | Severity |
-|-------------|----------|
-| > 0.80 | Critical |
-| 0.60 - 0.80 | High |
-| 0.45 - 0.60 | Medium |
-| 0.35 - 0.45 | Low |
-| < 0.35 | None |
-
-**Ultra-sensitive threshold:** A text is flagged as hateful if `ensemble_score > 0.35` OR if any single layer scores above 0.6.
+**Ensemble Scoring:** Weighted average of the three models.
 
 ### Engine 5: Advice Disparity Analysis
 
-**What it does:** Detects when text gives different quality of advice based on someone's identity (e.g., encouraging men but discouraging women from leadership).
+**What it does:** Detects when text gives different quality of advice based on someone's identity.
 
 **How it works:**
-1. We define 4 advice categories with example phrases:
-   - **Positive Advice:** "excellent opportunity", "strongly suggest", "you'd be great"
-   - **Negative Advice:** "might want to reconsider", "perhaps wait", "risky choice"
-   - **Conditional Advice:** "only if", "depends on", "once you've"
-   - **Directive Advice:** "you must", "you should", "essential that you"
-2. The text embedding is compared to all 4 categories.
-3. If the text mentions identity terms AND has a disproportionate similarity to Negative or Conditional advice (vs. Positive), it flags an advice disparity with a score from 0-100.
+Compares text against clusters of **Positive**, **Negative**, **Conditional**, and **Directive** advice. Flags if identity terms are paired disproportionately with negative/conditional advice.
 
 ### Engine 6: Quality / Vagueness Analysis
 
-**What it does:** Scores how vague or subjective the text is (0-100). This catches feedback like "she doesn't have the right culture fit" which is often used as coded bias.
+**What it does:** Scores how vague or subjective the text is (0-100).
 
 **Concept clusters:** 
-- **Vague:** "attitude", "culture fit", "presence", "energy", "vibe", "personality"
-- **Subjective:** "too much", "not enough", "hard to explain", "just a feeling"
+- **Vague:** "attitude", "culture fit", "vibe"
+- **Subjective:** "too much", "hard to explain", "just a feeling"
 
 ---
 
-## 6. Technology Stack — What We Used and Why
+## 6. Mathematical Foundation
+
+For the judges who want to see the math, here are the exact formulas driving Verifair's analysis:
+
+### A. Semantic Similarity (Cosine)
+We measure the angle between the **Target Text Vector** ($t$) and **Identity Concept Vectors** ($i$) within our 768-dimensional embedding space:
+
+```math
+sim(t, i) = \frac{t \cdot i}{\|t\| \|i\|}
+```
+
+### B. Statistical Bias (Z-Score)
+To filter out noise, we normalize similarity scores against a baseline distribution derived from neutral business text:
+
+```math
+Z = \frac{x - \mu_{baseline}}{\sigma_{baseline}}
+```
+*   **Threshold:** We flag bias only when $|Z| > 2.0$ (approx. 95% confidence interval).
+
+### C. Effect Size (Cohen's *d* & Hedges' *g*)
+We calculate the *magnitude* of bias, correcting for small sample sizes using Hedges' correction:
+
+**Cohen's *d*:**
+```math
+d = \frac{\bar{x}_1 - \bar{x}_2}{s_{pooled}}
+```
+
+**Hedges' *g* Correction:**
+```math
+g \approx d \times (1 - \frac{3}{4(n_1 + n_2) - 9})
+```
+
+### D. SEAT (Sentence Embedding Association Test)
+Measures the differential association between a target sentence ($w$) and two attribute sets (Pleasant $A$ vs. Unpleasant $B$):
+
+```math
+s(w, A, B) = \text{mean}_{a \in A} \cos(w, a) - \text{mean}_{b \in B} \cos(w, b)
+```
+
+### E. Hate Speech Ensemble Scoring
+Our final hate speech confidence score ($S_{final}$) is a weighted ensemble designed to prioritize implicit hate detection:
+
+```math
+S_{final} = (0.35 \times P_{Dynabench}) + (0.40 \times P_{ToxiGen}) + (0.25 \times P_{Lexicon})
+```
+*   **$P_{ToxiGen}$ (0.40):** Highest weight because detecting implicit hate is our competitive advantage.
+
+---
+
+## 7. Technology Stack — What We Used and Why
 
 ### Backend (Python)
 
@@ -284,7 +285,7 @@ ToxiGen gets the highest weight (0.40) because implicit hate is harder to detect
 
 ---
 
-## 7. Key Features
+## 8. Key Features
 
 ### Multi-Input Batch Analysis
 Upload multiple files (PDF, CSV, TXT) and/or enter multiple text inputs simultaneously. The system:
@@ -318,7 +319,7 @@ Full JWT-based auth system: register, login, and all API calls require a Bearer 
 
 ---
 
-## 8. Data Flow — Step by Step
+## 9. Data Flow — Step by Step
 
 Here is what happens when you click "Run Bias Audit":
 
@@ -372,7 +373,7 @@ Here is what happens when you click "Run Bias Audit":
 
 ---
 
-## 9. API Endpoints
+## 10. API Endpoints
 
 | Method | Endpoint | Auth | Purpose |
 |--------|----------|------|---------|
@@ -387,7 +388,7 @@ Here is what happens when you click "Run Bias Audit":
 
 ---
 
-## 10. Research Papers Behind Our Work
+## 11. Research Papers Behind Our Work
 
 Every technique in Verifair is backed by published, peer-reviewed research:
 
@@ -405,7 +406,7 @@ Every technique in Verifair is backed by published, peer-reviewed research:
 
 ---
 
-## 11. How to Run It
+## 12. How to Run It
 
 ### Prerequisites
 - Python 3.9+
@@ -440,7 +441,7 @@ ollama serve
 
 ---
 
-## 12. Sample Demo Script
+## 13. Sample Demo Script
 
 Here is a suggested script for demonstrating Verifair at the hackathon:
 
