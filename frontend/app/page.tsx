@@ -47,10 +47,22 @@ export default function Home() {
       });
       // Sort by newest
       setHistory(res.data.sort((a: AuditHistoryItem, b: AuditHistoryItem) => b.id - a.id));
-    } catch (error) {
-      console.error("Failed to load history", error);
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
-        logout();
+    } catch (error: any) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          console.log("Session expired while fetching history.");
+          logout();
+          return; // Stop here
+        }
+        console.error("Failed to load history - Response Error:", {
+          status: error.response?.status,
+          data: error.response?.data,
+          headers: error.response?.headers
+        });
+      } else if (error.request) {
+        console.error("Failed to load history - No Response:", error.request);
+      } else {
+        console.error("Failed to load history - Setup Error:", error.message);
       }
     } finally {
       setLoadingHistory(false);
@@ -244,19 +256,23 @@ export default function Home() {
             <DragDropUpload onUpload={handleUpload} isUploading={isUploading} />
           </div>
 
-          {/* Tips Section */}
-          <div className="grid grid-cols-3 gap-4 text-center text-slate-500 text-sm">
-            <div className="p-4 rounded-xl border border-slate-800/50 bg-slate-900/20">
-              <strong className="block text-indigo-400 mb-1">Z-Score Analysis</strong>
-              Detects statistical anomalies in semantic distance.
+          {/* Feature Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-center text-slate-500 text-sm">
+            <div className="p-4 rounded-xl border border-slate-800/50 bg-slate-900/20 hover:border-indigo-500/30 transition-colors">
+              <strong className="block text-indigo-400 mb-1">Z-Score + WEAT/SEAT</strong>
+              Statistical anomaly &amp; differential association bias detection.
             </div>
-            <div className="p-4 rounded-xl border border-slate-800/50 bg-slate-900/20">
-              <strong className="block text-indigo-400 mb-1">Context Windows</strong>
-              Analyzes 3-sentence chunks to preserve meaning.
+            <div className="p-4 rounded-xl border border-slate-800/50 bg-slate-900/20 hover:border-purple-500/30 transition-colors">
+              <strong className="block text-purple-400 mb-1">Stereotype Detection</strong>
+              13-category StereoSet + CrowS-Pairs pattern matching.
             </div>
-            <div className="p-4 rounded-xl border border-slate-800/50 bg-slate-900/20">
-              <strong className="block text-indigo-400 mb-1">Identity Vectoring</strong>
-              Checks against 6+ protected classes.
+            <div className="p-4 rounded-xl border border-red-500/20 bg-red-950/10 hover:border-red-500/40 transition-colors">
+              <strong className="block text-red-400 mb-1">Hate Speech (3-Layer)</strong>
+              Dynabench RoBERTa + ToxiGen + Lexicon ensemble.
+            </div>
+            <div className="p-4 rounded-xl border border-slate-800/50 bg-slate-900/20 hover:border-cyan-500/30 transition-colors">
+              <strong className="block text-cyan-400 mb-1">Selection Bias</strong>
+              Four-Fifths Rule, Chi-Square, adverse impact ratio.
             </div>
           </div>
         </div>

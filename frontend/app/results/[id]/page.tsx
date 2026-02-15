@@ -9,8 +9,9 @@ import { useAuth } from '@/lib/auth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AnalysisVisualizations } from '@/components/AnalysisVisualizations';
+import { HateSpeechPanel, HateSpeechData } from '@/components/HateSpeechPanel';
 import { cn } from '@/lib/utils';
-import { ArrowLeft, Loader2, Activity, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, Activity, CheckCircle, ShieldAlert } from 'lucide-react';
 
 // --- Types (Duplicated for now, ideally in a types file) ---
 interface BiasFlag {
@@ -51,15 +52,29 @@ interface StereotypeAnalysis {
     all_category_scores: Record<string, number>;
 }
 
+interface WeatAnalysis {
+    seat_score: number;
+    cohens_d: number;
+    p_value: number;
+    pleasant_mean: number;
+    unpleasant_mean: number;
+    interpretation: string;
+    pleasant_scores: number[];
+    unpleasant_scores: number[];
+}
+
 interface AnalysisResult {
     text_snippet: string;
     is_biased: boolean;
     bias_flags: BiasFlag[];
     topics: AnalysisTopic[];
     explanation?: string;
-    quality_score?: number; // Quality Score (0-100)
-    advice_disparity?: AdviceDisparity; // Advice Disparity Test
-    stereotype_analysis?: StereotypeAnalysis; // NEW: Stereotype Detection
+    quality_score?: number;
+    advice_disparity?: AdviceDisparity;
+    stereotype_analysis?: StereotypeAnalysis;
+    hate_speech_analysis?: HateSpeechData;
+    weat_analysis?: WeatAnalysis;
+    source_file?: string; // populated for batch/multi-input results
     statistics: {
         mean_association: number;
         std_deviation: number;
@@ -80,6 +95,12 @@ interface FullReport {
         top_identities: string[];
         total_files: number;
         total_flags: number;
+        hate_speech_summary?: {
+            total_hate_detected: number;
+            max_ensemble_score: number;
+            worst_severity: string;
+            hate_types_found: string[];
+        };
     };
 }
 
@@ -157,8 +178,25 @@ export default function ResultPage() {
     ) : 0;
 
     const filteredResults = report?.results.filter(r =>
-        r.bias_flags.some(f => f.z_score >= sensitivity)
+        r.bias_flags.some(f => f.z_score >= sensitivity) ||
+        r.hate_speech_analysis?.hate_detected ||
+        r.stereotype_analysis?.has_stereotype ||
+        r.advice_disparity?.has_disparity
     ) || [];
+
+    // Aggregate hate speech stats across all chunks
+    const hateChunks = report?.results.filter(r => r.hate_speech_analysis?.hate_detected) || [];
+    const totalHateDetected = hateChunks.length;
+    const maxHateScore = report?.results.reduce((max, r) => {
+        const score = r.hate_speech_analysis?.ensemble_score || 0;
+        return score > max ? score : max;
+    }, 0) || 0;
+    const worstSeverity = report?.results.reduce((worst, r) => {
+        const sev = r.hate_speech_analysis?.severity || 'None';
+        const order: Record<string, number> = { 'Critical': 4, 'High': 3, 'Medium': 2, 'Low': 1, 'None': 0 };
+        return (order[sev] || 0) > (order[worst] || 0) ? sev : worst;
+    }, 'None') || 'None';
+    const allHateTypes = [...new Set(report?.results.flatMap(r => r.hate_speech_analysis?.hate_types || []) || [])];
 
     if (fetching || loading) {
         return (
@@ -252,6 +290,75 @@ export default function ResultPage() {
                         </p>
                     </Card>
 
+                    {/* Hate Speech Summary Card */}
+                    <Card className={cn(
+                        "glass-panel p-6",
+                        totalHateDetected > 0
+                            ? "bg-gradient-to-br from-red-950/30 to-slate-900 border-red-500/30"
+                            : "bg-gradient-to-br from-green-950/20 to-slate-900 border-green-500/20"
+                    )}>
+                        <div className="flex justify-between items-start mb-2">
+                            <h3 className="text-sm font-bold text-slate-300 uppercase tracking-widest flex items-center">
+                                <ShieldAlert className="w-4 h-4 mr-2" />
+                                Hate Speech Detection
+                            </h3>
+                            <span className={cn(
+                                "text-xs px-2 py-0.5 rounded font-bold uppercase",
+                                totalHateDetected > 0
+                                    ? "bg-red-500/20 text-red-400"
+                                    : "bg-emerald-500/20 text-emerald-400"
+                            )}>
+                                {totalHateDetected > 0 ? `${totalHateDetected} DETECTED` : 'CLEAN'}
+                            </span>
+                        </div>
+                        <div className="space-y-3 mt-3">
+                            <div className="flex justify-between items-center">
+                                <span className="text-xs text-slate-500">Max Ensemble Score</span>
+                                <span className={cn(
+                                    "font-mono text-lg font-bold",
+                                    maxHateScore > 0.6 ? "text-red-400" :
+                                        maxHateScore > 0.35 ? "text-orange-400" : "text-green-400"
+                                )}>
+                                    {(maxHateScore * 100).toFixed(1)}%
+                                </span>
+                            </div>
+                            <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+                                <div
+                                    className={cn(
+                                        "h-full rounded-full transition-all duration-1000",
+                                        maxHateScore > 0.6 ? "bg-red-500" :
+                                            maxHateScore > 0.35 ? "bg-orange-500" : "bg-green-500"
+                                    )}
+                                    style={{ width: `${Math.min(maxHateScore * 100, 100)}%` }}
+                                />
+                            </div>
+                            <div className="flex justify-between text-xs">
+                                <span className="text-slate-500">Severity</span>
+                                <span className={cn(
+                                    "font-semibold",
+                                    worstSeverity === 'Critical' ? 'text-red-400' :
+                                        worstSeverity === 'High' ? 'text-orange-400' :
+                                            worstSeverity === 'Medium' ? 'text-yellow-400' :
+                                                worstSeverity === 'Low' ? 'text-cyan-400' : 'text-green-400'
+                                )}>
+                                    {worstSeverity}
+                                </span>
+                            </div>
+                            {allHateTypes.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                    {allHateTypes.map((t, i) => (
+                                        <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/10 text-red-300 border border-red-500/20">
+                                            {t.replace(/_/g, ' ')}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <p className="text-[10px] text-slate-600 mt-3">
+                            Powered by Dynabench RoBERTa · ToxiGen · Lexicon+Embedding
+                        </p>
+                    </Card>
+
                     {/* Visualizations Switcher */}
                     <AnalysisVisualizations
                         radarData={getRadarData()}
@@ -265,18 +372,53 @@ export default function ResultPage() {
                     <div className="space-y-4">
 
                         {/* NEW: Batch Executive Summary Box */}
-                        {report.is_batch_summary && report.batch_conclusion && (
+                        {report.is_batch_summary && (
                             <div className="glass-panel p-6 bg-indigo-900/10 border-indigo-500/30 mb-6">
                                 <h4 className="text-lg font-bold text-indigo-300 flex items-center mb-3">
-                                    <Activity className="w-5 h-5 mr-2" /> Executive Summary (Multi-Document Analysis)
+                                    <Activity className="w-5 h-5 mr-2" /> Multi-Input Analysis Summary
                                 </h4>
-                                <p className="text-slate-200 text-lg leading-relaxed italic font-serif">
-                                    &quot;{report.batch_conclusion}&quot;
-                                </p>
+
+                                {/* Stats Grid */}
                                 {report.batch_stats && (
-                                    <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-slate-400">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                                        <div className="bg-slate-800/50 rounded-lg p-3 text-center">
+                                            <p className="text-2xl font-bold text-white">{report.batch_stats.total_files}</p>
+                                            <p className="text-xs text-slate-500">Inputs Analyzed</p>
+                                        </div>
+                                        <div className="bg-slate-800/50 rounded-lg p-3 text-center">
+                                            <p className="text-2xl font-bold text-white">{report.total_sentences_analyzed}</p>
+                                            <p className="text-xs text-slate-500">Total Chunks</p>
+                                        </div>
+                                        <div className="bg-slate-800/50 rounded-lg p-3 text-center">
+                                            <p className={cn("text-2xl font-bold", report.batch_stats.total_flags > 0 ? "text-red-400" : "text-green-400")}>
+                                                {report.batch_stats.total_flags}
+                                            </p>
+                                            <p className="text-xs text-slate-500">Bias Flags</p>
+                                        </div>
+                                        <div className="bg-slate-800/50 rounded-lg p-3 text-center">
+                                            <p className={cn("text-2xl font-bold",
+                                                (report.batch_stats.hate_speech_summary?.total_hate_detected ?? 0) > 0 ? "text-red-400" : "text-green-400")}>
+                                                {report.batch_stats.hate_speech_summary?.total_hate_detected ?? 0}
+                                            </p>
+                                            <p className="text-xs text-slate-500">Hate Speech</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Executive Conclusion */}
+                                {report.batch_conclusion && (
+                                    <div className="bg-slate-800/30 rounded-lg p-4 border border-slate-700/50 mb-3">
+                                        <p className="text-slate-200 leading-relaxed italic font-serif">
+                                            &quot;{report.batch_conclusion}&quot;
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* Details */}
+                                {report.batch_stats && (
+                                    <div className="grid grid-cols-2 gap-4 text-sm text-slate-400">
                                         <div>Most Biased: <span className="text-white">{report.batch_stats.most_biased_file}</span></div>
-                                        <div>Top Groups: <span className="text-white">{report.batch_stats.top_identities.join(", ")}</span></div>
+                                        <div>Top Groups: <span className="text-white">{report.batch_stats.top_identities.join(", ") || "None"}</span></div>
                                     </div>
                                 )}
                             </div>
@@ -289,8 +431,19 @@ export default function ResultPage() {
                             </div>
                         ) : (
                             filteredResults.map((res, idx) => (
-                                <Card key={idx} className="glass-card border-l-4 border-l-red-500 hover:bg-slate-900/80 transition-colors">
+                                <Card key={idx} className={cn(
+                                    "glass-card border-l-4 hover:bg-slate-900/80 transition-colors",
+                                    res.is_biased ? "border-l-red-500" : "border-l-slate-600"
+                                )}>
                                     <CardContent className="p-4">
+                                        {/* Source file label for batch results */}
+                                        {res.source_file && (
+                                            <div className="mb-2 pb-2 border-b border-slate-800/50 flex items-center gap-2">
+                                                <span className="text-[10px] px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-mono">
+                                                    {res.source_file}
+                                                </span>
+                                            </div>
+                                        )}
                                         <div className="flex justify-between items-start mb-2">
                                             <div className="flex flex-wrap gap-2">
                                                 {res.bias_flags.filter(f => f.z_score >= sensitivity).map((flag, i) => (
@@ -311,7 +464,7 @@ export default function ResultPage() {
                                             ))}
                                             {res.quality_score && res.quality_score > 50 && (
                                                 <span className="text-xs text-amber-400 bg-amber-900/20 px-2 py-0.5 rounded-full border border-amber-500/20">
-                                                    ⚠️ Vague/Subjective
+                                                    Vague/Subjective
                                                 </span>
                                             )}
                                             {res.advice_disparity && (
@@ -319,7 +472,7 @@ export default function ResultPage() {
                                                     ? "text-orange-400 bg-orange-900/20 border-orange-500/20"
                                                     : "text-green-400 bg-green-900/20 border-green-500/20"
                                                     }`}>
-                                                    {res.advice_disparity.has_disparity ? "🔀 Advice Disparity" : "✓ Balanced Advice"}
+                                                    {res.advice_disparity.has_disparity ? "Advice Disparity" : "Balanced Advice"}
                                                 </span>
                                             )}
                                             {res.stereotype_analysis && (
@@ -327,7 +480,17 @@ export default function ResultPage() {
                                                     ? "text-purple-400 bg-purple-900/20 border-purple-500/20"
                                                     : "text-green-400 bg-green-900/20 border-green-500/20"
                                                     }`}>
-                                                    {res.stereotype_analysis.has_stereotype ? "🎭 Stereotype Detected" : "✓ No Stereotypes"}
+                                                    {res.stereotype_analysis.has_stereotype ? "Stereotype Detected" : "No Stereotypes"}
+                                                </span>
+                                            )}
+                                            {res.hate_speech_analysis && (
+                                                <span className={`text-xs px-2 py-0.5 rounded-full border ${res.hate_speech_analysis.hate_detected
+                                                    ? "text-red-400 bg-red-900/20 border-red-500/20"
+                                                    : "text-green-400 bg-green-900/20 border-green-500/20"
+                                                    }`}>
+                                                    {res.hate_speech_analysis.hate_detected
+                                                        ? `Hate: ${res.hate_speech_analysis.severity} (${(res.hate_speech_analysis.ensemble_score * 100).toFixed(0)}%)`
+                                                        : "No Hate Speech"}
                                                 </span>
                                             )}
                                         </div>
@@ -350,7 +513,7 @@ export default function ResultPage() {
                                                 <div className="flex justify-between items-center mb-2">
                                                     <p className={`font-semibold text-xs uppercase tracking-wide ${res.advice_disparity.has_disparity ? "text-orange-300" : "text-green-300"
                                                         }`}>
-                                                        {res.advice_disparity.has_disparity ? "⚠️ Advice Disparity Detected" : "✓ Advice Disparity Analysis: Passed"}
+                                                        {res.advice_disparity.has_disparity ? "Advice Disparity Detected" : "Advice Disparity Analysis: Passed"}
                                                     </p>
                                                     {!res.advice_disparity.has_disparity && (
                                                         <span className="text-xs text-green-400 bg-green-900/20 px-2 py-0.5 rounded">Safe</span>
@@ -384,16 +547,15 @@ export default function ResultPage() {
                                         )}
 
                                         {/* Stereotype Detection Section */}
-                                        {/* Stereotype Detection Section */}
                                         {res.stereotype_analysis && (
                                             <div className={`mt-4 p-3 rounded-r text-sm border-l-2 ${res.stereotype_analysis.has_stereotype
-                                                    ? "bg-purple-900/10 border-purple-500 text-slate-300"
-                                                    : "bg-green-900/10 border-green-500 text-slate-400"
+                                                ? "bg-purple-900/10 border-purple-500 text-slate-300"
+                                                : "bg-green-900/10 border-green-500 text-slate-400"
                                                 }`}>
                                                 <div className="flex justify-between items-center mb-2">
                                                     <p className={`font-semibold text-xs uppercase tracking-wide ${res.stereotype_analysis.has_stereotype ? "text-purple-300" : "text-green-300"
                                                         }`}>
-                                                        {res.stereotype_analysis.has_stereotype ? "🎭 Stereotype Bias Detected" : "✓ Stereotype Check: Passed"}
+                                                        {res.stereotype_analysis.has_stereotype ? "Stereotype Bias Detected" : "Stereotype Check: Passed"}
                                                     </p>
                                                     {!res.stereotype_analysis.has_stereotype && (
                                                         <span className="text-xs text-green-400 bg-green-900/20 px-2 py-0.5 rounded">Safe</span>
@@ -409,9 +571,9 @@ export default function ResultPage() {
                                                         <div>
                                                             <span className="text-slate-500">Severity:</span>
                                                             <span className={`ml-2 font-semibold ${res.stereotype_analysis.severity_level === 'Critical' ? 'text-red-400' :
-                                                                    res.stereotype_analysis.severity_level === 'High' ? 'text-orange-400' :
-                                                                        res.stereotype_analysis.severity_level === 'Medium' ? 'text-yellow-400' :
-                                                                            'text-green-400'
+                                                                res.stereotype_analysis.severity_level === 'High' ? 'text-orange-400' :
+                                                                    res.stereotype_analysis.severity_level === 'Medium' ? 'text-yellow-400' :
+                                                                        'text-green-400'
                                                                 }`}>{res.stereotype_analysis.severity_level}</span>
                                                         </div>
                                                         {res.stereotype_analysis.stereotype_type && (
@@ -434,6 +596,14 @@ export default function ResultPage() {
                                                     </p>
                                                 )}
                                             </div>
+                                        )}
+
+                                        {/* Hate Speech Detection Section — Interactive Plotly */}
+                                        {res.hate_speech_analysis && (
+                                            <HateSpeechPanel
+                                                data={res.hate_speech_analysis}
+                                                textSnippet={res.text_snippet}
+                                            />
                                         )}
                                     </CardContent>
                                 </Card>

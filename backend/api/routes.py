@@ -14,6 +14,7 @@ from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
 import logging
 import json
+import numpy as np
 from datetime import datetime
 
 from backend.core.sentinel import VerifairSentinel
@@ -25,6 +26,23 @@ from backend.api.auth import get_current_user
 
 router = APIRouter()
 logger = logging.getLogger("VerifairAPI")
+
+
+def convert_numpy(obj):
+    """Recursively convert numpy types to native Python for JSON serialization."""
+    if isinstance(obj, dict):
+        return {k: convert_numpy(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_numpy(i) for i in obj]
+    elif isinstance(obj, (np.bool_,)):
+        return bool(obj)
+    elif isinstance(obj, (np.integer,)):
+        return int(obj)
+    elif isinstance(obj, (np.floating,)):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    return obj
 
 # Initialize Sentinel
 try:
@@ -48,13 +66,21 @@ async def audit_content(
     if not sentinel:
         raise HTTPException(status_code=503, detail="Bias Detection Engine not initialized.")
     
+    # Clean up files list — browsers may send empty UploadFile entries
+    valid_files = []
+    if files:
+        for f in files:
+            if f and f.filename and f.filename.strip():
+                valid_files.append(f)
+    
     # Validation
-    if not files and not text_input:
+    if not valid_files and not text_input:
          raise HTTPException(status_code=400, detail="No content provided. Upload files or enter text.")
+
+    logger.info(f"Received {len(valid_files)} files and text_input={'yes' if text_input else 'no'}")
 
     results_list = []
     
-    # Helper to process single item
     # Helper to process single item
     async def process_content(name: str, raw_text: str):
         if not raw_text or not raw_text.strip():
@@ -90,7 +116,7 @@ async def audit_content(
             filename=name,
             total_sentences=len(text_chunks),
             bias_flags_count=total_flags,
-            full_report_json=json.loads(json.dumps(response_data)),
+            full_report_json=convert_numpy(json.loads(json.dumps(response_data, default=str))),
             owner=current_user
         )
         db.add(new_record)
@@ -98,8 +124,8 @@ async def audit_content(
 
     try:
         # 1. Process Files
-        if files:
-            for file in files:
+        if valid_files:
+            for file in valid_files:
                 if file.content_type == "application/pdf":
                     file_bytes = await file.read()
                     text = IngestionService.extract_text_from_pdf(file_bytes)
@@ -146,7 +172,21 @@ async def audit_content(
                         if record:
                             results_list.append(record)
                 else:
-                    logger.warning(f"Skipping unsupported file type: {file.filename} ({file.content_type})")
+                    # Fallback: try to read as plain text for unknown types
+                    # This handles .txt files created from Blob in browsers that may have
+                    # content_type='application/octet-stream' or empty
+                    logger.info(f"Unknown type '{file.content_type}' for {file.filename}, trying as text...")
+                    try:
+                        file_bytes = await file.read()
+                        text = file_bytes.decode('utf-8', errors='ignore')
+                        if text.strip():
+                            record = await process_content(file.filename, text)
+                            if record:
+                                results_list.append(record)
+                        else:
+                            logger.warning(f"File {file.filename} was empty after reading as text")
+                    except Exception as e:
+                        logger.warning(f"Could not process {file.filename}: {e}")
 
         # 2. Process Raw Text
         if text_input:
@@ -167,40 +207,69 @@ async def audit_content(
             # Find document with most bias
             most_biased = max(results_list, key=lambda x: x.bias_flags_count)
             
-            # Aggregate top identities (this requires parsing JSON or storing it separately, 
-            # for now let's just do a simple pass if we have the objects in memory before refresh)
-            # Since r.full_report_json is loaded from DB after refresh, we can use it.
-            
+            # Aggregate all results from all individual records into one unified list
+            all_results = []
             all_identities = []
+            all_hate_types = []
+            total_hate_detected = 0
+            max_hate_score = 0.0
+            worst_hate_severity = "None"
+            severity_order = {"Critical": 4, "High": 3, "Medium": 2, "Low": 1, "None": 0}
+            
             for r in results_list:
-                # Need to refresh to access full_report_json if not eager loaded
+                # Refresh to get full_report_json from DB
                 db.refresh(r) 
                 report = r.full_report_json
                 if report and "results" in report:
-                     for item in report["results"]:
-                         for flag in item.get("bias_flags", []):
-                             all_identities.append(flag["identity"])
+                    for item in report["results"]:
+                        # Tag each result with its source file for clarity
+                        item_copy = dict(item)
+                        item_copy["source_file"] = r.filename
+                        all_results.append(item_copy)
+                        
+                        # Aggregate identities
+                        for flag in item.get("bias_flags", []):
+                            all_identities.append(flag["identity"])
+                        
+                        # Aggregate hate speech data
+                        hate_data = item.get("hate_speech_analysis", {})
+                        if hate_data.get("hate_detected"):
+                            total_hate_detected += 1
+                            hs_score = hate_data.get("ensemble_score", 0)
+                            if hs_score > max_hate_score:
+                                max_hate_score = hs_score
+                            hs_severity = hate_data.get("severity", "None")
+                            if severity_order.get(hs_severity, 0) > severity_order.get(worst_hate_severity, 0):
+                                worst_hate_severity = hs_severity
+                            all_hate_types.extend(hate_data.get("hate_types", []))
             
-            top_identities = list(set(all_identities))[:5] # Simple unique list for now
+            top_identities = list(set(all_identities))[:5]
+            unique_hate_types = list(set(all_hate_types))
             
             batch_stats = {
                 "total_files": len(results_list),
                 "total_sentences": total_sentences,
                 "total_flags": total_flags,
                 "most_biased_file": most_biased.filename,
-                "top_identities": top_identities
+                "top_identities": top_identities,
+                "hate_speech_summary": {
+                    "total_hate_detected": total_hate_detected,
+                    "max_ensemble_score": float(max_hate_score),
+                    "worst_severity": worst_hate_severity,
+                    "hate_types_found": unique_hate_types
+                }
             }
             
             # Generate LLM Conclusion
             conclusion = await ExplainerService.generate_batch_conclusion(batch_stats)
             
-            # Create a "Summary Record"
+            # Create a "Summary Record" — now with ALL results merged
             summary_data = {
                 "filename": f"Batch Summary ({len(results_list)} files)",
                 "total_sentences_analyzed": total_sentences,
                 "bias_flags_count": total_flags,
-                "results": [], # No snippets, just summary text
-                "batch_conclusion": conclusion, # NEW FIELD
+                "results": all_results,  # <-- ALL results from all files
+                "batch_conclusion": conclusion,
                 "is_batch_summary": True,
                 "batch_stats": batch_stats
             }
@@ -209,7 +278,7 @@ async def audit_content(
                 filename=f"BATCH REPORT: {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}",
                 total_sentences=total_sentences,
                 bias_flags_count=total_flags,
-                full_report_json=summary_data,
+                full_report_json=convert_numpy(json.loads(json.dumps(summary_data, default=str))),
                 owner=current_user
             )
             db.add(summary_record)
@@ -328,6 +397,9 @@ async def analyze_selection_bias(
     try:
         # Perform selection bias analysis
         result = detect_selection_bias(request.candidates, request.identity_groups)
+        
+        # Convert numpy types to native Python for JSON serialization
+        result = convert_numpy(result)
         
         # Store in database
         audit_record = AuditRecord(

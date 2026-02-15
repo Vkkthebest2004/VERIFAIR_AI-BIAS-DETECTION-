@@ -51,3 +51,13 @@ Thumbs.db
 
 # Docker
 docker-compose.override.yml
+
+# Database files
+*.db
+
+# Logs
+*.log
+backend.log
+
+# Test results (screenshots)
+test_results/

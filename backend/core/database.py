@@ -5,13 +5,15 @@ from sqlalchemy.orm import sessionmaker
 import os
 
 # Get DB URL from env or default to local (for non-docker dev)
+# Using SQLite by default for easier local setup
 DATABASE_URL = os.getenv(
     "DATABASE_URL", 
-    "postgresql://verifair:verifair_secret@localhost:5432/verifair_db"
+    "sqlite:///./verifair.db"
 )
 
 # SQLAlchemy setup
-engine = create_engine(DATABASE_URL)
+connect_args = {"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()

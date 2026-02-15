@@ -34,13 +34,14 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({ onUpload, isUplo
         setIsDragging(false);
         if (e.dataTransfer.files) {
             const newFiles = Array.from(e.dataTransfer.files).filter(f =>
-                f.type === 'application/pdf' || f.type === 'text/csv' || f.name.endsWith('.csv')
+                f.type === 'application/pdf' || f.type === 'text/csv' || f.type === 'text/plain' ||
+                f.name.endsWith('.csv') || f.name.endsWith('.txt')
             );
             if (newFiles.length > 0) {
                 setFiles(prev => [...prev, ...newFiles].slice(0, 50)); // Limit to 50 files
                 setActiveTab("file");
             } else {
-                alert("Only PDF and CSV files are supported!");
+                alert("Only PDF, CSV, and TXT files are supported!");
             }
         }
     }, []);
@@ -48,7 +49,8 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({ onUpload, isUplo
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const newFiles = Array.from(e.target.files).filter(f =>
-                f.type === 'application/pdf' || f.type === 'text/csv' || f.name.endsWith('.csv')
+                f.type === 'application/pdf' || f.type === 'text/csv' || f.type === 'text/plain' ||
+                f.name.endsWith('.csv') || f.name.endsWith('.txt')
             );
             setFiles(prev => [...prev, ...newFiles].slice(0, 50)); // Limit to 50 files
         }
@@ -121,7 +123,7 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({ onUpload, isUplo
                         id="file-upload"
                         type="file"
                         className="hidden"
-                        accept=".pdf,.csv"
+                        accept=".pdf,.csv,.txt"
                         multiple
                         onChange={handleFileChange}
                     />

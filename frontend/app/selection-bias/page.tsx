@@ -183,7 +183,7 @@ export default function SelectionBiasPage() {
 
                             {csvFile && (
                                 <span className="text-green-400">
-                                    ✓ {csvFile.name} ({candidates.length} candidates)
+                                    {csvFile.name} ({candidates.length} candidates)
                                 </span>
                             )}
                         </div>
@@ -233,7 +233,7 @@ export default function SelectionBiasPage() {
                                         <div className="flex items-start gap-3">
                                             <AlertTriangle className="w-6 h-6 text-red-400 flex-shrink-0 mt-1" />
                                             <div>
-                                                <p className="font-semibold text-red-300 text-lg">⚠️ Selection Bias Detected</p>
+                                                <p className="font-semibold text-red-300 text-lg">Selection Bias Detected</p>
                                                 <p className="text-red-200 mt-1">
                                                     Four-Fifths Rule violations: {result.four_fifths_violations.join(', ')}
                                                 </p>
@@ -293,7 +293,7 @@ export default function SelectionBiasPage() {
                                                         <span className={`font-mono font-semibold ${stats.four_fifths_violation ? 'text-red-400' : 'text-green-400'
                                                             }`}>
                                                             {stats.adverse_impact_ratio.toFixed(2)}
-                                                            {stats.four_fifths_violation && ' ❌'}
+                                                            {stats.four_fifths_violation && ' (Violation)'}
                                                         </span>
                                                     </div>
                                                     <div className="flex justify-between">

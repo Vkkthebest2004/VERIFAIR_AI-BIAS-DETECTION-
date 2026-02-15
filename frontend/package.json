@@ -15,8 +15,10 @@
     "framer-motion": "^12.31.1",
     "lucide-react": "^0.563.0",
     "next": "16.1.6",
+    "plotly.js": "^3.3.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "react-plotly.js": "^2.6.0",
     "recharts": "^3.7.0",
     "tailwind-merge": "^3.4.0"
   },
@@ -25,6 +27,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/react-plotly.js": "^2.6.4",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
