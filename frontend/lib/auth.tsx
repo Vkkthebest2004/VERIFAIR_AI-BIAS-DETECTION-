@@ -4,6 +4,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { API } from "@/lib/api";
 
 // --- Types ---
 interface User {
@@ -53,7 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
 
             try {
-                const res = await axios.get("http://localhost:8000/api/v1/auth/me", {
+                const res = await axios.get(`${API}/auth/me`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setUser(res.data);
@@ -73,7 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const login = (token: string) => {
         localStorage.setItem("access_token", token);
-        axios.get("http://localhost:8000/api/v1/auth/me", {
+        axios.get(`${API}/auth/me`, {
             headers: { Authorization: `Bearer ${token}` }
         }).then(res => {
             setUser(res.data);

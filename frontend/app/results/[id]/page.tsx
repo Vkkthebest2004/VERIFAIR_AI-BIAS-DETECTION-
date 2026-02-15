@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API } from '@/lib/api';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 
@@ -124,7 +125,7 @@ export default function ResultPage() {
             if (!token || !id) return;
 
             try {
-                const res = await axios.get(`http://localhost:8000/api/v1/history/${id}`, {
+                const res = await axios.get(`${API}/history/${id}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setReport(res.data);

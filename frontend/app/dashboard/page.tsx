@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import { API } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { useTheme } from '@/lib/theme';
@@ -35,7 +36,7 @@ export default function DashboardPage() {
         if (!token) { setLoadingHistory(false); return; }
 
         try {
-            const res = await axios.get('http://localhost:8000/api/v1/history', {
+            const res = await axios.get(`${API}/history`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setHistory(res.data.sort((a: AuditHistoryItem, b: AuditHistoryItem) => b.id - a.id));
@@ -69,7 +70,7 @@ export default function DashboardPage() {
                 }
             });
 
-            const response = await axios.post('http://localhost:8000/api/v1/audit', formData, {
+            const response = await axios.post(`${API}/audit`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data', 'Authorization': `Bearer ${token}` },
             });
 

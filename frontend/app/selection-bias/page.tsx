@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import axios from 'axios';
+import { API } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { Card, CardContent } from '@/components/ui/card';
@@ -104,7 +105,7 @@ export default function SelectionBiasPage() {
 
         try {
             const response = await axios.post(
-                'http://localhost:8000/api/v1/analyze-selection-bias',
+                `${API}/analyze-selection-bias`,
                 {
                     candidates,
                     identity_groups: identityGroups

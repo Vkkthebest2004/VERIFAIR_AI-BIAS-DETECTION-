@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
+import { API } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import {
@@ -45,12 +46,12 @@ export default function LoginPage() {
                 formData.append("username", email);
                 formData.append("password", password);
                 const res = await axios.post(
-                    "http://localhost:8000/api/v1/auth/token",
+                    `${API}/auth/token`,
                     formData
                 );
                 login(res.data.access_token);
             } else {
-                await axios.post("http://localhost:8000/api/v1/auth/register", {
+                await axios.post(`${API}/auth/register`, {
                     email,
                     password,
                     full_name: fullName || "User",
@@ -59,7 +60,7 @@ export default function LoginPage() {
                 formData.append("username", email);
                 formData.append("password", password);
                 const res = await axios.post(
-                    "http://localhost:8000/api/v1/auth/token",
+                    `${API}/auth/token`,
                     formData
                 );
                 login(res.data.access_token);
