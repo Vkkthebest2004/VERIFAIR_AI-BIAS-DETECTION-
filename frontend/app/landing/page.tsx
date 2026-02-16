@@ -48,9 +48,7 @@ export default function LandingPage() {
             >
                 <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-cyan-500 flex items-center justify-center shadow-lg">
-                            <Shield className="w-5 h-5 text-white" />
-                        </div>
+                        <Image src="/logo.svg" alt="Verifair Logo" width={40} height={40} className="w-10 h-10" />
                         <span className="text-xl font-bold text-slate-800 tracking-tight">
                             Veri<span className="text-indigo-600">fair</span>
                         </span>
@@ -344,9 +342,7 @@ export default function LandingPage() {
             <footer className="py-10 px-6 border-t border-slate-200">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 to-cyan-500 flex items-center justify-center">
-                            <Shield className="w-4 h-4 text-white" />
-                        </div>
+                        <Image src="/logo.svg" alt="Verifair Logo" width={32} height={32} className="w-8 h-8" />
                         <span className="font-bold text-slate-700">Verifair</span>
                         <span className="px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 border border-indigo-100 text-xs font-mono">
                             v3.2.0

@@ -4,12 +4,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { API } from '@/lib/api';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useAuth } from '@/lib/auth';
 import { useTheme } from '@/lib/theme';
 import { DragDropUpload } from '@/components/DragDropUpload';
 import {
     Shield, Activity, History, FileText, Loader2, ChevronDown, ChevronUp,
     Sun, Moon, LogOut, BarChart3, Zap, Users, Globe, Sparkles, ArrowRight,
+    Fingerprint,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -31,6 +33,7 @@ export default function DashboardPage() {
     const [history, setHistory] = useState<AuditHistoryItem[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(true);
     const [visibleHistoryCount, setVisibleHistoryCount] = useState(5);
+    const [auditContext, setAuditContext] = useState("General Audit");
 
     const fetchHistory = useCallback(async () => {
         const token = getToken();
@@ -70,6 +73,9 @@ export default function DashboardPage() {
                     formData.append('files', new File([blob], `text_input_${idx + 1}.txt`, { type: 'text/plain' }));
                 }
             });
+
+            // Add Context
+            formData.append('context', auditContext);
 
             const response = await axios.post(`${API}/audit`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data', 'Authorization': `Bearer ${token}` },
@@ -112,6 +118,7 @@ export default function DashboardPage() {
         { icon: Users, title: "Stereotype Detection", desc: "13-category StereoSet + CrowS-Pairs", color: "#a78bfa" },
         { icon: Zap, title: "Hate Speech (3-Layer)", desc: "Dynabench RoBERTa + ToxiGen + Lexicon", color: "#f87171" },
         { icon: Globe, title: "Selection Bias", desc: "Four-Fifths Rule, Chi-Square, adverse impact", color: "#06b6d4" },
+        { icon: Fingerprint, title: "Resume Forensics", desc: "Name-proxy, college pedigree, language disparity", color: "#f59e0b" },
     ];
 
     return (
@@ -128,12 +135,7 @@ export default function DashboardPage() {
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
                     {/* Brand */}
                     <div className="flex items-center gap-3">
-                        <div
-                            className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md"
-                            style={{ background: "var(--btn-primary-bg)" }}
-                        >
-                            <Shield className="w-5 h-5 text-white" />
-                        </div>
+                        <Image src="/logo.svg" alt="Verifair Logo" width={40} height={40} className="w-10 h-10" />
                         <div>
                             <h1 className="text-lg font-bold tracking-tight leading-none">
                                 Veri<span style={{ color: "var(--accent-primary)" }}>fair</span>
@@ -158,6 +160,20 @@ export default function DashboardPage() {
                         >
                             <Activity className="w-4 h-4" style={{ color: "var(--accent-cyan)" }} />
                             Selection Bias
+                        </button>
+
+                        <button
+                            onClick={() => router.push('/resume-forensics')}
+                            className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:scale-[1.02] active:scale-[0.98]"
+                            style={{
+                                background: "var(--bg-card)",
+                                border: "1px solid var(--border-secondary)",
+                                color: "var(--text-secondary)",
+                                boxShadow: "var(--shadow-card)",
+                            }}
+                        >
+                            <Fingerprint className="w-4 h-4" style={{ color: "#f59e0b" }} />
+                            Resume Forensics
                         </button>
 
                         <button
@@ -369,18 +385,42 @@ export default function DashboardPage() {
                             }}
                         >
                             <div className="p-8">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                                        style={{ background: "var(--accent-glow)" }}>
-                                        <Activity className="w-5 h-5" style={{ color: "var(--accent-primary)" }} />
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                                            style={{ background: "var(--accent-glow)" }}>
+                                            <Activity className="w-5 h-5" style={{ color: "var(--accent-primary)" }} />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-xl font-bold">Initialize Analysis</h2>
+                                            <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                                                Upload documents or paste texts for deep bias auditing
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h2 className="text-xl font-bold">Initialize Analysis</h2>
-                                        <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                                            Upload documents or paste texts for deep bias auditing
-                                        </p>
+
+                                    {/* Context Selector */}
+                                    <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 rounded-lg p-1 pr-3 border border-transparent focus-within:border-indigo-500/50 transition-all">
+                                        <span className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Context:</span>
+                                        <select
+                                            value={auditContext}
+                                            onChange={(e) => setAuditContext(e.target.value)}
+                                            className="bg-transparent text-sm font-medium focus:outline-none cursor-pointer"
+                                            style={{ color: "var(--text-primary)" }}
+                                        >
+                                            <option value="General Audit">General Audit</option>
+                                            <option value="Job Description">Job Description</option>
+                                            <option value="Resume / CV">Resume / CV</option>
+                                            <option value="Performance Review">Performance Review</option>
+                                            <option value="Email Communication">Email Communication</option>
+                                            <option value="Marketing Material">Marketing Material</option>
+                                            <option value="Legal Contract">Legal Contract</option>
+                                            <option value="Medical / Health Record">Medical / Health Record</option>
+                                            <option value="News Article">News Article</option>
+                                        </select>
                                     </div>
                                 </div>
+
                                 <DragDropUpload onUpload={handleUpload} isUploading={isUploading} />
                             </div>
                         </div>
@@ -427,9 +467,7 @@ export default function DashboardPage() {
                     <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm" style={{ color: "var(--text-muted)" }}>
                         <div className="flex items-center gap-3">
                             <div className="flex items-center gap-2">
-                                <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: "var(--btn-primary-bg)" }}>
-                                    <Shield className="w-3 h-3 text-white" />
-                                </div>
+                                <Image src="/logo.svg" alt="Verifair Logo" width={20} height={20} className="w-5 h-5" />
                                 <span className="font-bold text-sm" style={{ color: "var(--text-primary)" }}>Verifair</span>
                             </div>
                             <span
@@ -450,6 +488,9 @@ export default function DashboardPage() {
                             </a>
                             <a href="/selection-bias" className="hover:opacity-80 font-medium" style={{ color: "var(--text-secondary)" }}>
                                 Selection Bias
+                            </a>
+                            <a href="/resume-forensics" className="hover:opacity-80 font-medium" style={{ color: "var(--text-secondary)" }}>
+                                Resume Forensics
                             </a>
                         </div>
                     </div>

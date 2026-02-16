@@ -1,63 +1,48 @@
-
-# Python
+# ─── Python ───
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-/lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
 *.egg
-MANIFEST
+*.egg-info/
+dist/
+build/
 
-# Virtual Environment
+# ─── Virtual Environment ───
 venv/
 env/
 ENV/
 
-# Node.js
+# ─── Node.js / Next.js ───
 node_modules/
-npm-debug.log
-yarn-error.log
 .next/
 out/
+npm-debug.log
+yarn-error.log
 
-# IDEs
+# ─── IDE ───
 .idea/
 .vscode/
 *.swp
 *.swo
 
-# OS
+# ─── OS ───
 .DS_Store
 Thumbs.db
 
-# Environment Variables
+# ─── Environment Variables ───
 .env
 .env.local
 .env.*.local
 
-# Docker
+# ─── Docker ───
 docker-compose.override.yml
 
-# Database files
+# ─── Database ───
 *.db
 
-# Logs
+# ─── Logs ───
 *.log
-backend.log
 
-# Test results (screenshots)
-test_results/
+# ─── Test Artifacts ───
+scripts/testing/fixtures/resume_batch/

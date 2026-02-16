@@ -14,7 +14,7 @@ class ExplainerService:
     """
 
     @staticmethod
-    async def explain_bias(text_snippet: str, identities: list, z_scores: list) -> Optional[str]:
+    async def explain_bias(text_snippet: str, identities: list, z_scores: list, context: str = "General") -> Optional[str]:
         """
         Sends the flagged text to the LLM to get a user-friendly explanation.
         """
@@ -22,13 +22,15 @@ class ExplainerService:
             # Construct a clear, simple prompt for the average user
             identity_str = ", ".join(identities)
             prompt = f"""
-            You are an AI Bias Auditor explaining technical findings to a non-technical HR manager.
+            You are an AI Bias Auditor explaining technical findings to a non-technical manager.
+            
+            Context of the document: {context}
             
             The following text was flagged by a statistical engine as having a high semantic association with: {identity_str}.
             
             Text: "{text_snippet}"
             
-            Please explain in 1-2 simple sentences why this wording might be considered biased or problematic in a professional context. 
+            Please explain in 1-2 simple sentences why this wording might be considered biased or problematic in a "{context}" context. 
             Focus on the implication of the words used. Do not use technical jargon.
             """
             
@@ -59,13 +61,14 @@ class ExplainerService:
             return None
 
     @staticmethod
-    async def generate_batch_conclusion(stats: dict) -> Optional[str]:
+    async def generate_batch_conclusion(stats: dict, context: str = "General") -> Optional[str]:
         """
         Generates a high-level executive summary conclusion for a batch of documents.
         """
         try:
             prompt = f"""
-            You are a Senior Logic Auditor. Review the following aggregate statistics from a multi-document bias audit:
+            You are a Senior Logic Auditor. Review the following aggregate statistics from a multi-document bias audit.
+            The documents are related to: {context}.
             
             - Total Documents Analyzed: {stats.get('total_files')}
             - Total Sentences: {stats.get('total_sentences')}
@@ -73,9 +76,9 @@ class ExplainerService:
             - Document with Most Bias: {stats.get('most_biased_file')}
             - Top Affected Groups: {", ".join(stats.get('top_identities', []))}
             
-            Based on this data, provide a 2-3 sentence "Executive Conclusion" on the overall state of the documents. 
+            Based on this data, provide a 2-3 sentence "Executive Conclusion" on the overall state of the documents in this {context} context.
             Is there systemic bias? Is it isolated? What is the general trend? 
-            Be professional and direct.
+            Be professional, objective, and direct.
             """
             
             payload = {

@@ -1,0 +1,9 @@
+node_modules/
+.next/
+out/
+coverage/
+.npm/
+.yarn/
+.DS_Store
+*.log
+.git/

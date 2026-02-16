@@ -7,7 +7,13 @@ LLM_MODEL = "llama3.2"
 EXPLANATION_THRESHOLD = 2.0 # Only send to LLM if Z-Score is above this
 
 # ... existing configs ...
-IDENTITIES = ["Male", "Female", "Non-binary", "Asian", "Black", "White", "Hispanic", "Muslim", "Christian", "Jewish", "LGBTQ", "Disabled", "Elderly"]
+IDENTITIES = [
+    "Male", "Female", "Non-binary", 
+    "Asian", "Black", "White", "Hispanic", 
+    "Muslim", "Christian", "Jewish", "Hindu", "Sikh", # Added Indian Religions
+    "LGBTQ", "Disabled", "Elderly",
+    "Dalit/Bahujan", "North-Indian", "South-Indian" # Added Indian Context
+]
 
 TARGET_CONCEPTS = {
     "Risk": ["danger", "violence", "criminal", "risk", "threat", "aggressive", "harmful"],
@@ -124,6 +130,26 @@ STEREOTYPE_CONCEPTS = {
         "lazy", "unmotivated", "uneducated", "criminal", "dirty", "irresponsible",
         "entitled", "privileged", "out of touch", "elitist", "snob"
     ],
+
+    # --- INDIA SPECIFIC BIAS (BHARAT-BIAS MODULE) ---
+    "Caste_Bias_Stereotypes": [
+        "reservation candidate", "quota hire", "lacks merit", "not meritocratic",
+        "dirty", "polluted", "impure", "lower caste", "backward class",
+        "chamar", "bhangi", "untouchable", "low born", "menial"
+    ],
+
+    "Regional_Stereotypes_India": [
+        # North vs South
+        "madraasi", "northie", "bhaiya", "bimaru",
+        # Stereotypes
+        "lazy bengali", "aggressive punjabi", "scamster", "uneducated bihari",
+        "imposes hindi", "anti-national", "terrorist sympathizer"
+    ],
+
+    "Colorism_Skin_Tone_Bias": [
+        "fair skin", "wheatish complexion", "dusky", "dark skinned",
+        "clean look", "pleasing personality" # Often code for 'fair' in India
+    ],
     
     # Intersectional Stereotypes (compound stereotypes)
     "Intersectional_Stereotypes": [
@@ -153,6 +179,9 @@ STEREOTYPE_SEVERITY = {
     "Disability_Capability_Stereotypes": 0.9,
     "LGBTQ_Behavior_Stereotypes": 0.9,
     "Class_Trait_Stereotypes": 0.8,
+    "Caste_Bias_Stereotypes": 1.0, # Critical Severity in India
+    "Regional_Stereotypes_India": 0.8,
+    "Colorism_Skin_Tone_Bias": 0.85,
     "Intersectional_Stereotypes": 1.0,  # Highest severity
     "Positive_Stereotypes": 0.6,  # Lower but still problematic
     "Explicit_Identity_Bias": 1.0  # SOTA Toxicity Detection

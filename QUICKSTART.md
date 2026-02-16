@@ -1,8 +1,15 @@
-# Verifair QuickStart Guide 🚀
+# Verifair — Quick Start Guide
 
-Get the Verifair frontend and backend up and running in minutes!
+Get the Verifair frontend and backend running in minutes.
 
-## 📦 Easy Installation (One-Time Setup)
+## Prerequisites
+
+Make sure you have these installed:
+-   **Python 3.9+** — `python3 --version`
+-   **Node.js 18+** — `node --version`
+-   **Ngrok** *(optional, for public URLs)* — `brew install ngrok`
+
+## One-Time Setup
 
 1.  **Clone the Repository:**
     ```bash
@@ -13,39 +20,63 @@ Get the Verifair frontend and backend up and running in minutes!
 2.  **Run the Installer Script:**
     This automatically sets up your Python virtual environment and installs all dependencies.
     ```bash
-    chmod +x install_project.sh
-    ./install_project.sh
+    chmod +x scripts/shell/install_project.sh
+    ./scripts/shell/install_project.sh
     ```
 
-## ▶️ Start the Application (Daily Use)
+## Start the Application
 
-Simply double-click or run:
 ```bash
-chmod +x start_verifair.sh  # (First time only)
-./start_verifair.sh
+chmod +x scripts/shell/start_verifair.sh   # first time only
+./scripts/shell/start_verifair.sh
 ```
 
-This will magically open a **new Terminal window** with separate tabs for:
-1.  **Frontend**: Runs on `http://localhost:3000` (Your beautiful UI!)
-2.  **Backend**: API server on `http://localhost:8000` (Powered by Python FastAPI)
-3.  **Ngrok Tunnel**: If installed, gives you a public URL (e.g., `https://xyz.ngrok-free.app`)
+This opens a new Terminal window with tabs for:
+1.  **Frontend** — `http://localhost:3000`
+2.  **Backend** — `http://localhost:8000`
+3.  **Ngrok Tunnel** — public URL *(if installed)*
 
-## 🛑 Stop the Application
+## Stop the Application
 
-If you ran it via `start_verifair.sh`, simply **close the new Terminal window** to stop everything.
-
-Alternatively, you can run the kill switch:
+Close the Terminal window, or run:
 ```bash
-chmod +x stop_verifair.sh
-./stop_verifair.sh
+./scripts/shell/stop_verifair.sh
 ```
 
-## ⚠️ Requirements
+## Project Structure
 
-Make sure you have these installed:
--   **Python 3.9+** (Check: `python3 --version`)
--   **Node.js 18+** (Check: `node --version`)
--   **Ngrok** (Optional, for public URLs: `brew install ngrok`)
+```
+VERIFAIR/
+├── README.md                    # Project overview
+├── QUICKSTART.md                # This file
+├── docker-compose.yml           # Container orchestration
+│
+├── backend/                     # FastAPI + ML Engine
+│   ├── main.py                  # App entry point
+│   ├── api/                     # REST endpoints & auth
+│   ├── core/                    # Sentinel engine, analyzers, models
+│   ├── config/                  # Bias config & parameters
+│   ├── services/                # Ingestion & utilities
+│   └── requirements.txt
+│
+├── frontend/                    # Next.js UI
+│   ├── app/                     # Pages (dashboard, results, etc.)
+│   ├── components/              # Reusable UI components
+│   ├── lib/                     # API client, auth, theme
+│   └── public/                  # Static assets (logo, media)
+│
+├── docs/                        # All documentation
+│   ├── ARCHITECTURE_AND_DFD.md
+│   ├── CHANGELOG.md
+│   ├── HACKATHON_GUIDE.md
+│   ├── LEARNING_CHEAT_SHEET.md
+│   └── RESUME_FORENSICS_GUIDE.md
+│
+└── scripts/
+    ├── shell/                   # Start / stop / install scripts
+    └── testing/                 # Test suites & fixtures
+        └── fixtures/            # Sample input data (CSVs, PDFs, etc.)
+```
 
 ---
-**Enjoy Verifair!** 🛡️✨
+*Verifair — Algorithmic Bias Audit Platform*

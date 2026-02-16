@@ -58,6 +58,7 @@ except Exception as e:
 async def audit_content(
     files: List[UploadFile] = File(default=None), 
     text_input: Optional[str] = Form(default=None),
+    context: Optional[str] = Form(default="General"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -101,7 +102,7 @@ async def audit_content(
                 z_scores = [f["z_score"] for f in res["bias_flags"]]
                 
                 # Call Llama 3.2
-                explanation = await ExplainerService.explain_bias(res["text_snippet"], flagged_ids, z_scores)
+                explanation = await ExplainerService.explain_bias(res["text_snippet"], flagged_ids, z_scores, context=context)
                 res["explanation"] = explanation
         # -----------------------------------------
 
@@ -202,86 +203,38 @@ async def audit_content(
 
         db.commit()
         
-        # --- NEW: Batch Aggregation & Conclusion ---
         if len(results_list) > 1:
-            total_flags = sum(r.bias_flags_count for r in results_list)
-            total_sentences = sum(r.total_sentences for r in results_list)
+            # Import CollectiveReporter
+            from backend.core.reporting import CollectiveReporter
             
-            # Find document with most bias
-            most_biased = max(results_list, key=lambda x: x.bias_flags_count)
+            # --- Generate Collective Report ---
+            collective_report = CollectiveReporter.generate_report(results_list)
             
-            # Aggregate all results from all individual records into one unified list
+            # Generate LLM Conclusion based on the collective stats
+            conclusion = await ExplainerService.generate_batch_conclusion(collective_report, context=context)
+            
+            # Merge the conclusion into the report
+            collective_report["batch_conclusion"] = conclusion
+            collective_report["filename"] = f"COLLECTIVE REPORT ({len(results_list)} files)"
+            
+            # Embed ALL individual results into the summary for the frontend to access if needed
+            # (Though the new UI might just show the collective stats)
             all_results = []
-            all_identities = []
-            all_hate_types = []
-            total_hate_detected = 0
-            max_hate_score = 0.0
-            worst_hate_severity = "None"
-            severity_order = {"Critical": 4, "High": 3, "Medium": 2, "Low": 1, "None": 0}
-            
             for r in results_list:
-                # Refresh to get full_report_json from DB
-                db.refresh(r) 
-                report = r.full_report_json
-                if report and "results" in report:
-                    for item in report["results"]:
-                        # Tag each result with its source file for clarity
+                db.refresh(r)
+                if r.full_report_json and "results" in r.full_report_json:
+                    for item in r.full_report_json["results"]:
                         item_copy = dict(item)
                         item_copy["source_file"] = r.filename
                         all_results.append(item_copy)
-                        
-                        # Aggregate identities
-                        for flag in item.get("bias_flags", []):
-                            all_identities.append(flag["identity"])
-                        
-                        # Aggregate hate speech data
-                        hate_data = item.get("hate_speech_analysis", {})
-                        if hate_data.get("hate_detected"):
-                            total_hate_detected += 1
-                            hs_score = hate_data.get("ensemble_score", 0)
-                            if hs_score > max_hate_score:
-                                max_hate_score = hs_score
-                            hs_severity = hate_data.get("severity", "None")
-                            if severity_order.get(hs_severity, 0) > severity_order.get(worst_hate_severity, 0):
-                                worst_hate_severity = hs_severity
-                            all_hate_types.extend(hate_data.get("hate_types", []))
             
-            top_identities = list(set(all_identities))[:5]
-            unique_hate_types = list(set(all_hate_types))
-            
-            batch_stats = {
-                "total_files": len(results_list),
-                "total_sentences": total_sentences,
-                "total_flags": total_flags,
-                "most_biased_file": most_biased.filename,
-                "top_identities": top_identities,
-                "hate_speech_summary": {
-                    "total_hate_detected": total_hate_detected,
-                    "max_ensemble_score": float(max_hate_score),
-                    "worst_severity": worst_hate_severity,
-                    "hate_types_found": unique_hate_types
-                }
-            }
-            
-            # Generate LLM Conclusion
-            conclusion = await ExplainerService.generate_batch_conclusion(batch_stats)
-            
-            # Create a "Summary Record" — now with ALL results merged
-            summary_data = {
-                "filename": f"Batch Summary ({len(results_list)} files)",
-                "total_sentences_analyzed": total_sentences,
-                "bias_flags_count": total_flags,
-                "results": all_results,  # <-- ALL results from all files
-                "batch_conclusion": conclusion,
-                "is_batch_summary": True,
-                "batch_stats": batch_stats
-            }
-            
+            collective_report["results"] = all_results
+
             summary_record = AuditRecord(
-                filename=f"BATCH REPORT: {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}",
-                total_sentences=total_sentences,
-                bias_flags_count=total_flags,
-                full_report_json=convert_numpy(json.loads(json.dumps(summary_data, default=str))),
+                filename=f"COLLECTIVE REPORT: {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}",
+                total_sentences=collective_report["total_sentences"],
+                bias_flags_count=collective_report["total_bias_flags"],
+                full_report_json=convert_numpy(json.loads(json.dumps(collective_report, default=str))),
                 owner=current_user
             )
             db.add(summary_record)
@@ -307,6 +260,8 @@ async def audit_content(
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         logger.error(f"Internal Server Error: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail="An error occurred during processing.")
 
 @router.get("/history", response_model=List[Dict[str, Any]])
@@ -371,6 +326,9 @@ from pydantic import BaseModel
 class SelectionBiasRequest(BaseModel):
     candidates: List[Dict[str, Any]]
     identity_groups: Optional[List[str]] = None
+
+class ResumeForensicsRequest(BaseModel):
+    candidates: List[Dict[str, Any]]
 
 @router.post("/analyze-selection-bias", response_model=Dict[str, Any])
 async def analyze_selection_bias(
@@ -437,4 +395,202 @@ async def analyze_selection_bias(
     
     except Exception as e:
         logger.error(f"Selection bias analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/analyze-resume-forensics", response_model=Dict[str, Any])
+async def analyze_resume_forensics(
+    request: ResumeForensicsRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Resume Forensics: Deep bias analysis for hiring data (JSON / CSV mode).
+    
+    Analyzes resume/hiring CSVs for:
+    - Qualification-Controlled Bias (Equalized Odds)
+    - Name-Proxy Bias (Indian surname → community)
+    - College Pedigree Bias (IIT/NIT preference)
+    - Interviewer Language Disparity
+    - Skill-Outcome Mismatch
+    - Experience Penalty Detection
+    """
+    from backend.core.resume_bias_analyzer import ResumeBiasAnalyzer
+    
+    try:
+        if len(request.candidates) > 50:
+            raise HTTPException(status_code=400, detail="Batch limit is 50 candidates. Please reduce your dataset.")
+        
+        analyzer = ResumeBiasAnalyzer()
+        result = analyzer.analyze(request.candidates)
+        
+        # Convert numpy types
+        result = convert_numpy(result)
+        
+        # Store in database
+        audit_record = AuditRecord(
+            user_id=current_user.id,
+            filename=f"Resume Forensics - {len(request.candidates)} candidates",
+            total_sentences=len(request.candidates),
+            bias_flags_count=result.get('forensics_score', {}).get('modules_flagged', 0),
+            full_report_json={
+                "type": "resume_forensics",
+                "timestamp": datetime.utcnow().isoformat(),
+                "analysis": result
+            }
+        )
+        db.add(audit_record)
+        db.commit()
+        db.refresh(audit_record)
+        
+        return {
+            "record_id": audit_record.id,
+            "analysis": result,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Resume forensics analysis failed: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/upload-resume-forensics", response_model=Dict[str, Any])
+async def upload_resume_forensics(
+    selected_files: List[UploadFile] = File(default=None),
+    rejected_files: List[UploadFile] = File(default=None),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Resume Forensics: PDF / file upload mode.
+    
+    Upload resumes tagged as 'Selected' or 'Rejected'.
+    Supports PDF and TXT files. Each file is parsed into a candidate record
+    and then analyzed for bias patterns.
+    
+    Batch limit: 50 files total.
+    """
+    from backend.core.resume_bias_analyzer import ResumeBiasAnalyzer
+    from backend.core.resume_parser import ResumeParser
+    
+    # Validate files exist
+    valid_selected = [f for f in (selected_files or []) if f and f.filename and f.filename.strip()]
+    valid_rejected = [f for f in (rejected_files or []) if f and f.filename and f.filename.strip()]
+    
+    total_files = len(valid_selected) + len(valid_rejected)
+    
+    if total_files < 2:
+        raise HTTPException(status_code=400, detail="Upload at least 1 selected and 1 rejected resume.")
+    
+    if total_files > 50:
+        raise HTTPException(status_code=400, detail=f"Batch limit is 50 resumes. You uploaded {total_files}.")
+    
+    if len(valid_selected) == 0:
+        raise HTTPException(status_code=400, detail="Upload at least 1 'Selected' resume.")
+    
+    if len(valid_rejected) == 0:
+        raise HTTPException(status_code=400, detail="Upload at least 1 'Rejected' resume.")
+    
+    try:
+        candidates = []
+        parse_errors = []
+        
+        # Process selected resumes
+        for file in valid_selected:
+            try:
+                file_bytes = await file.read()
+                
+                if file.filename.lower().endswith('.pdf') or file.content_type == 'application/pdf':
+                    text = IngestionService.extract_text_from_pdf(file_bytes)
+                else:
+                    text = file_bytes.decode('utf-8', errors='ignore')
+                
+                candidate = ResumeParser.parse(text, filename=file.filename, is_selected=True)
+                candidates.append(candidate)
+                logger.info(f"Parsed SELECTED resume: {file.filename} → {candidate.get('name', 'Unknown')}")
+                
+            except Exception as e:
+                parse_errors.append(f"Failed to parse {file.filename}: {str(e)}")
+                logger.warning(f"Failed to parse selected file {file.filename}: {e}")
+        
+        # Process rejected resumes
+        for file in valid_rejected:
+            try:
+                file_bytes = await file.read()
+                
+                if file.filename.lower().endswith('.pdf') or file.content_type == 'application/pdf':
+                    text = IngestionService.extract_text_from_pdf(file_bytes)
+                else:
+                    text = file_bytes.decode('utf-8', errors='ignore')
+                
+                candidate = ResumeParser.parse(text, filename=file.filename, is_selected=False)
+                candidates.append(candidate)
+                logger.info(f"Parsed REJECTED resume: {file.filename} → {candidate.get('name', 'Unknown')}")
+                
+            except Exception as e:
+                parse_errors.append(f"Failed to parse {file.filename}: {str(e)}")
+                logger.warning(f"Failed to parse rejected file {file.filename}: {e}")
+        
+        if len(candidates) < 2:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Only {len(candidates)} resumes parsed successfully. Need at least 2. Errors: {'; '.join(parse_errors)}"
+            )
+        
+        # Run forensics analysis
+        analyzer = ResumeBiasAnalyzer()
+        result = analyzer.analyze(candidates)
+        result = convert_numpy(result)
+        
+        # Add parse metadata
+        result["parse_summary"] = {
+            "total_uploaded": total_files,
+            "selected_count": len(valid_selected),
+            "rejected_count": len(valid_rejected),
+            "successfully_parsed": len(candidates),
+            "parse_errors": parse_errors,
+            "candidates_preview": [
+                {
+                    "name": c.get("name", "Unknown"),
+                    "selected": c.get("selected", False),
+                    "college": c.get("college", ""),
+                    "skills_count": len(c.get("skills", "").split(";")) if c.get("skills") else 0,
+                    "experience": c.get("experience"),
+                }
+                for c in candidates
+            ]
+        }
+        
+        # Store in database
+        audit_record = AuditRecord(
+            user_id=current_user.id,
+            filename=f"Resume Forensics (PDF) - {len(candidates)} resumes ({len(valid_selected)} sel / {len(valid_rejected)} rej)",
+            total_sentences=len(candidates),
+            bias_flags_count=result.get('forensics_score', {}).get('modules_flagged', 0),
+            full_report_json={
+                "type": "resume_forensics_pdf",
+                "timestamp": datetime.utcnow().isoformat(),
+                "analysis": result
+            }
+        )
+        db.add(audit_record)
+        db.commit()
+        db.refresh(audit_record)
+        
+        return {
+            "record_id": audit_record.id,
+            "analysis": result,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Resume forensics PDF upload failed: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))

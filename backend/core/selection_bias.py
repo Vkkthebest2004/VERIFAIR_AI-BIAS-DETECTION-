@@ -47,6 +47,65 @@ class SelectionBiasDetector:
         self.four_fifths_threshold = four_fifths_threshold
         logger.info("SelectionBiasDetector initialized")
     
+
+    def _analyze_keywords(self, candidates: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Analyze candidate text/notes for potential bias keywords.
+        """
+        BIAS_KEYWORDS = {
+            "Gender_Coded_Masculine": [
+                "ninja", "rockstar", "guru", "crush it", "dominate", "decisive", "assertive",
+                "strong", "competitive", "force", "independent"
+            ],
+            "Gender_Coded_Feminine": [
+                "supportive", "collaborative", "honest", "loyal", "interpersonal", "caring",
+                "nurturing", "empathetic", "understanding", "sensitive"
+            ],
+            "Age_Bias": [
+                "digital native", "recent grad", "energetic", "fresh", "young", "adaptable",
+                "overqualified", "culture fit", "gap", "career break", "legacy"
+            ],
+            "Racial_Code": [
+                "culture fit", "native english", "articulate", "polish", "clean", "urban",
+                "ghetto", "sketchy", "foreign", "illegal"
+            ],
+            "Disability_Bias": [
+                "healthy", "active", "fit", "strong", "lift", "carry", "stand", "walk",
+                "see", "hear", "speak"
+            ]
+        }
+
+        keyword_hits = {category: {} for category in BIAS_KEYWORDS}
+        total_with_text = 0
+
+        for cand in candidates:
+            text = cand.get("notes") or cand.get("text") or cand.get("feedback")
+            if not text:
+                continue
+            
+            total_with_text += 1
+            text_lower = str(text).lower()
+
+            for category, keywords in BIAS_KEYWORDS.items():
+                for kw in keywords:
+                    if f" {kw} " in f" {text_lower} " or text_lower.startswith(kw) or text_lower.endswith(kw):
+                        keyword_hits[category][kw] = keyword_hits[category].get(kw, 0) + 1
+
+        # Summarize results
+        summary = {}
+        for category, hits in keyword_hits.items():
+            total_hits = sum(hits.values())
+            if total_hits > 0:
+                summary[category] = {
+                    "total_hits": total_hits,
+                    "top_keywords": dict(sorted(hits.items(), key=lambda item: item[1], reverse=True)[:5])
+                }
+        
+        return {
+            "analyzed_count": total_with_text,
+            "keyword_summary": summary
+        }
+
     def analyze_selection_bias(
         self,
         candidates: List[Dict[str, Any]],
@@ -60,8 +119,9 @@ class SelectionBiasDetector:
                 {
                     "id": str,
                     "identities": List[str],
-                    "selected": bool,
-                    "score": float (optional)
+                    "selected": bool/int (0/1),
+                    "score": float (optional),
+                    "notes": str (optional)
                 }
             identity_groups: List of identity groups to analyze
         
@@ -74,7 +134,7 @@ class SelectionBiasDetector:
                 "bias_detected": False
             }
         
-        # Convert to DataFrame for easier analysis
+        # 1. Statistical Analysis
         df = self._prepare_dataframe(candidates, identity_groups)
         
         if df.empty:
@@ -109,11 +169,17 @@ class SelectionBiasDetector:
         )
         
         # Determine if bias is detected
-        bias_detected = (
+        bias_detected = bool(
             len(air_violations) > 0 or
             (chi_square_results['p_value'] < 0.05 if chi_square_results else False)
         )
-        
+
+        # 2. Keyword Analysis (New)
+        keyword_analysis = self._analyze_keywords(candidates)
+        if keyword_analysis.get("keyword_summary"):
+             # If significant keywords found, maybe bump severity?
+             pass
+
         return {
             "total_candidates": total_candidates,
             "total_selected": int(total_selected),
@@ -124,10 +190,12 @@ class SelectionBiasDetector:
             "bias_detected": bias_detected,
             "bias_score": bias_score,
             "severity": severity,
+            "keyword_analysis": keyword_analysis, # Added this
             "methodology": {
                 "four_fifths_rule": "EEOC Standard",
                 "chi_square_test": "Statistical Significance",
                 "z_test": "Proportion Comparison",
+                "keyword_scan": "Linguistic Bias Detection",
                 "threshold": self.four_fifths_threshold
             }
         }
@@ -144,8 +212,17 @@ class SelectionBiasDetector:
             if 'selected' not in candidate:
                 continue
             
+            # Robust mapping for 0/1, strings, booleans
+            raw_selected = candidate['selected']
+            if isinstance(raw_selected, str):
+                is_selected = raw_selected.lower() in ('true', '1', 'yes', 'selected', 'hire')
+            elif isinstance(raw_selected, (int, float)):
+                is_selected = tuple([bool(raw_selected)])[0] # Handle 0/1
+            else:
+                is_selected = bool(raw_selected)
+
             row = {
-                'selected': bool(candidate['selected']),
+                'selected': is_selected,
                 'score': candidate.get('score', 0)
             }
             
@@ -157,7 +234,7 @@ class SelectionBiasDetector:
             data.append(row)
         
         return pd.DataFrame(data)
-    
+
     def _analyze_group(
         self,
         df: pd.DataFrame,
@@ -166,11 +243,6 @@ class SelectionBiasDetector:
     ) -> Dict[str, Any]:
         """
         Analyze a specific identity group for selection bias.
-        
-        Uses:
-        1. Adverse Impact Ratio (AIR)
-        2. Z-test for proportions
-        3. Four-Fifths Rule
         """
         identity_col = f'is_{identity}'
         
@@ -190,9 +262,21 @@ class SelectionBiasDetector:
         non_group_selection_rate = non_group_selected / non_group_total if non_group_total > 0 else 0
         
         # Calculate Adverse Impact Ratio (AIR)
-        reference_rate = max(group_selection_rate, non_group_selection_rate)
-        air = group_selection_rate / reference_rate if reference_rate > 0 else 1.0
+        # AIR = Rate(Minority) / Rate(Majority)
+        # Note: In standard EEOC, we compare to the *highest* selection rate group. 
+        # Here we compare to "rest of population" or specific reference if needed.
+        # Ideally, we should find the group with the highest rate.
         
+        # Simplified: Compare This Group vs Rest
+        # If This Group is the highest, AIR is > 1. 
+        # If This Group is lower, AIR < 1.
+        
+        reference_rate = non_group_selection_rate
+        if reference_rate == 0:
+             air = 1.0 if group_selection_rate > 0 else 0.0 # Edge case
+        else:
+             air = group_selection_rate / reference_rate
+             
         # Z-test for proportions
         z_score, p_value = self._z_test_proportions(
             group_selected, group_total,
@@ -200,7 +284,13 @@ class SelectionBiasDetector:
         )
         
         # Determine if bias exists
-        has_bias = air < self.four_fifths_threshold and p_value < 0.05
+        # 1. Four-Fifths Violation: Selection rate < 80% of reference
+        four_fifths_violation = air < self.four_fifths_threshold
+        
+        # 2. Statistically Significant: p < 0.05
+        statistically_significant = p_value < 0.05 if p_value is not None else False
+        
+        has_bias = four_fifths_violation and statistically_significant
         
         # Calculate effect size (Cohen's h)
         effect_size = self._cohens_h(group_selection_rate, non_group_selection_rate)
@@ -223,14 +313,15 @@ class SelectionBiasDetector:
             "selection_rate": round(group_selection_rate, 3),
             "comparison_group_rate": round(non_group_selection_rate, 3),
             "adverse_impact_ratio": round(air, 3),
-            "demographic_parity_difference": round(dp_diff, 3) if dp_diff is not None else None, # New
+            "demographic_parity_difference": round(dp_diff, 3) if dp_diff is not None else None,
             "z_score": round(z_score, 3) if not np.isnan(z_score) else None,
             "p_value": round(p_value, 4) if not np.isnan(p_value) else None,
             "effect_size": round(effect_size, 3),
-            "has_bias": has_bias,
-            "four_fifths_violation": air < self.four_fifths_threshold
+            "has_bias": bool(has_bias),
+            "four_fifths_violation": bool(four_fifths_violation)
         }
-    
+
+
     def _z_test_proportions(
         self,
         x1: int, n1: int,
@@ -299,7 +390,7 @@ class SelectionBiasDetector:
                 "statistic": round(chi2, 3),
                 "p_value": round(p_value, 4),
                 "degrees_of_freedom": int(dof),
-                "significant": p_value < 0.05,
+                "significant": bool(p_value < 0.05),
                 "interpretation": "Significant bias detected" if p_value < 0.05 else "No significant bias"
             }
         except Exception as e:
@@ -379,21 +470,12 @@ class SelectionBiasDetector:
         
         return (round(bias_score, 1), severity)
 
-
-# Convenience function
 def detect_selection_bias(
     candidates: List[Dict[str, Any]],
     identity_groups: List[str] = None
 ) -> Dict[str, Any]:
     """
     Convenience function to detect selection bias.
-    
-    Args:
-        candidates: List of candidate dictionaries with 'identities' and 'selected' keys
-        identity_groups: List of identity groups to analyze (optional)
-    
-    Returns:
-        Bias analysis results
     """
     if identity_groups is None:
         # Extract all unique identities from candidates

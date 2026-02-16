@@ -7,13 +7,24 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Upload, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Upload, AlertTriangle, MessageSquare } from 'lucide-react';
 
 interface Candidate {
     id: string;
     identities: string[];
     selected: boolean;
     score?: number;
+    notes?: string;
+}
+
+interface KeywordHit {
+    total_hits: number;
+    top_keywords: Record<string, number>;
+}
+
+interface KeywordAnalysis {
+    analyzed_count: number;
+    keyword_summary: Record<string, KeywordHit>;
 }
 
 interface GroupStatistic {
@@ -48,6 +59,7 @@ interface SelectionBiasResult {
     bias_detected: boolean;
     bias_score: number;
     severity: string;
+    keyword_analysis?: KeywordAnalysis;
 }
 
 export default function SelectionBiasPage() {
@@ -60,32 +72,66 @@ export default function SelectionBiasPage() {
 
     const identityGroups = ["Male", "Female", "Non-binary", "Asian", "Black", "White", "Hispanic", "Muslim", "Christian", "Jewish", "LGBTQ", "Disabled", "Elderly"];
 
+    const parseCSV = (text: string): Candidate[] => {
+        const lines = text.split('\n').filter(l => l.trim());
+        if (lines.length < 2) return [];
+
+        const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
+        const dataLines = lines.slice(1);
+
+        // Try to identify column indices
+        const idIdx = headers.findIndex(h => h.includes('id') || h.includes('name') || h.includes('candidate'));
+        const identityIdx = headers.findIndex(h => h.includes('identity') || h.includes('group') || h.includes('demographic') || h.includes('race') || h.includes('gender'));
+        const selectedIdx = headers.findIndex(h => h.includes('load') || h.includes('select') || h.includes('hired') || h.includes('status') || h.includes('result') || h.includes('outcome'));
+        const scoreIdx = headers.findIndex(h => h.includes('score') || h.includes('rating'));
+        const notesIdx = headers.findIndex(h => h.includes('note') || h.includes('feedback') || h.includes('comment') || h.includes('text'));
+
+        // Fallback to position-based if headers not found clearly
+        const usePositions = selectedIdx === -1 && identityIdx === -1;
+
+        return dataLines.map((line, idx) => {
+            // Handle simple CSV splitting (naive, breaks on commas in quotes)
+            const values = line.split(',').map(v => v.trim());
+
+            let id = `candidate_${idx}`;
+            let identities: string[] = [];
+            let selected = false;
+            let score: number | undefined = undefined;
+            let notes: string | undefined = undefined;
+
+            if (usePositions) {
+                // Fallback: Default Scheme (ID, Identities, Selected, Score, Notes)
+                id = values[0] || id;
+                identities = values[1] ? values[1].split(';').map(s => s.trim()) : [];
+                const rawSel = values[2] ? values[2].toLowerCase() : 'false';
+                selected = rawSel === 'true' || rawSel === '1' || rawSel === 'yes' || rawSel === 'hired';
+                score = values[3] ? parseFloat(values[3]) : undefined;
+                notes = values[4] || undefined;
+            } else {
+                // Mapped Scheme
+                if (idIdx !== -1) id = values[idIdx];
+                if (identityIdx !== -1) identities = values[identityIdx] ? values[identityIdx].split(';').map(s => s.trim()) : [];
+
+                if (selectedIdx !== -1) {
+                    const rawSel = values[selectedIdx] ? values[selectedIdx].toLowerCase() : 'false';
+                    selected = rawSel === 'true' || rawSel === '1' || rawSel === 'yes' || rawSel === 'hired' || rawSel === 'selected';
+                }
+
+                if (scoreIdx !== -1) score = values[scoreIdx] ? parseFloat(values[scoreIdx]) : undefined;
+                if (notesIdx !== -1) notes = values[notesIdx];
+            }
+
+            return { id, identities, selected, score, notes };
+        });
+    };
+
     const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
         setCsvFile(file);
-
-        // Parse CSV
         const text = await file.text();
-        const lines = text.split('\n');
-        // const headers = lines[0].split(',').map(h => h.trim());
-
-        const parsedCandidates: Candidate[] = [];
-
-        for (let i = 1; i < lines.length; i++) {
-            if (!lines[i].trim()) continue;
-
-            const values = lines[i].split(',').map(v => v.trim());
-            const candidate: Candidate = {
-                id: values[0] || `candidate_${i}`,
-                identities: values[1] ? values[1].split(';').map(s => s.trim()) : [],
-                selected: values[2]?.toLowerCase() === 'true' || values[2] === '1',
-                score: values[3] ? parseFloat(values[3]) : undefined
-            };
-            parsedCandidates.push(candidate);
-        }
-
+        const parsedCandidates = parseCSV(text);
         setCandidates(parsedCandidates);
     };
 
@@ -102,6 +148,7 @@ export default function SelectionBiasPage() {
         }
 
         setAnalyzing(true);
+        setResult(null); // Clear previous results
 
         try {
             const response = await axios.post(
@@ -162,9 +209,14 @@ export default function SelectionBiasPage() {
                 <Card className="glass-card mb-8">
                     <CardContent className="p-6">
                         <h2 className="text-2xl font-semibold text-white mb-4">Upload Candidate Data</h2>
-                        <p className="text-slate-400 mb-4">
-                            Upload a CSV file with columns: id, identities (semicolon-separated), selected (true/false), score (optional)
-                        </p>
+                        <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700 mb-6 text-sm text-slate-300">
+                            <p className="mb-2 font-semibold">Supported Columns (Auto-Detected):</p>
+                            <ul className="list-disc list-inside space-y-1 ml-2 text-slate-400">
+                                <li><strong>Identity:</strong> &quot;Identities&quot;, &quot;Group&quot;, &quot;Race&quot;, &quot;Gender&quot; (semicolon-separated)</li>
+                                <li><strong>Outcome:</strong> &quot;Selected&quot;, &quot;Hired&quot;, &quot;Status&quot;, &quot;Result&quot; (1/0, True/False, Yes/No)</li>
+                                <li><strong>Text Analysis:</strong> &quot;Notes&quot;, &quot;Feedback&quot;, &quot;Comments&quot;</li>
+                            </ul>
+                        </div>
 
                         <div className="flex items-center gap-4">
                             <input
@@ -184,7 +236,7 @@ export default function SelectionBiasPage() {
 
                             {csvFile && (
                                 <span className="text-green-400">
-                                    {csvFile.name} ({candidates.length} candidates)
+                                    {csvFile.name} ({candidates.length} candidates found)
                                 </span>
                             )}
                         </div>
@@ -204,7 +256,8 @@ export default function SelectionBiasPage() {
                 {/* Results Section */}
                 {result && (
                     <div className="space-y-6">
-                        {/* Overview Card */}
+
+                        {/* 1. Overview Card */}
                         <Card className="glass-card">
                             <CardContent className="p-6">
                                 <h2 className="text-2xl font-semibold text-white mb-6">Analysis Summary</h2>
@@ -250,7 +303,51 @@ export default function SelectionBiasPage() {
                             </CardContent>
                         </Card>
 
-                        {/* Group Statistics */}
+                        {/* 2. Keyword Analysis (NEW) */}
+                        {result.keyword_analysis && result.keyword_analysis.analyzed_count > 0 && (
+                            <Card className="glass-card border-indigo-500/30 bg-slate-900/40">
+                                <CardContent className="p-6">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h2 className="text-2xl font-semibold text-white flex items-center gap-2">
+                                            <MessageSquare className="w-6 h-6 text-indigo-400" />
+                                            Linguistic Bias Analysis
+                                        </h2>
+                                        <span className="text-slate-400 text-sm bg-slate-800 px-3 py-1 rounded-full">
+                                            Scanned {result.keyword_analysis.analyzed_count} text fields
+                                        </span>
+                                    </div>
+
+                                    {Object.keys(result.keyword_analysis.keyword_summary).length === 0 ? (
+                                        <div className="text-center p-8 text-slate-500 italic">
+                                            No problematic bias keywords detected in candidate notes.
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                            {Object.entries(result.keyword_analysis.keyword_summary).map(([category, data]) => (
+                                                <div key={category} className="bg-slate-800/40 rounded-lg p-4 border border-slate-700">
+                                                    <h3 className="text-indigo-300 font-semibold mb-2 flex justify-between">
+                                                        {category.replace(/_/g, ' ')}
+                                                        <span className="text-xs bg-indigo-900 px-2 py-0.5 rounded text-indigo-200">
+                                                            {data.total_hits} hits
+                                                        </span>
+                                                    </h3>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {Object.entries(data.top_keywords).map(([word, count]) => (
+                                                            <span key={word} className="text-xs px-2 py-1 bg-slate-700 text-slate-200 rounded flex items-center gap-1 border border-slate-600">
+                                                                {word}
+                                                                <span className="text-slate-400 text-[10px]">x{count}</span>
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* 3. Group Statistics */}
                         <Card className="glass-card">
                             <CardContent className="p-6">
                                 <h2 className="text-2xl font-semibold text-white mb-6">Group Analysis</h2>
@@ -290,11 +387,11 @@ export default function SelectionBiasPage() {
                                                         <span className="text-white font-mono">{(stats.selection_rate * 100).toFixed(1)}%</span>
                                                     </div>
                                                     <div className="flex justify-between">
-                                                        <span className="text-slate-400">AIR:</span>
+                                                        <span className="text-slate-400">AIR (vs rest):</span>
                                                         <span className={`font-mono font-semibold ${stats.four_fifths_violation ? 'text-red-400' : 'text-green-400'
                                                             }`}>
                                                             {stats.adverse_impact_ratio?.toFixed(2) ?? 'N/A'}
-                                                            {stats.four_fifths_violation && ' (Violation)'}
+                                                            {stats.four_fifths_violation && ' < 0.80'}
                                                         </span>
                                                     </div>
                                                     <div className="flex justify-between">
@@ -323,7 +420,7 @@ export default function SelectionBiasPage() {
                             </CardContent>
                         </Card>
 
-                        {/* Statistical Tests */}
+                        {/* 4. Statistical Tests */}
                         <Card className="glass-card">
                             <CardContent className="p-6">
                                 <h2 className="text-2xl font-semibold text-white mb-6">Statistical Tests</h2>

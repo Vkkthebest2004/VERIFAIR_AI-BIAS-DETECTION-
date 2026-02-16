@@ -5,8 +5,8 @@ import axios from "axios";
 import { API } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
-    Shield,
     Eye,
     EyeOff,
     ArrowRight,
@@ -101,9 +101,7 @@ export default function LoginPage() {
                 {/* Overlay content */}
                 <div className="relative z-10 flex flex-col justify-between p-12">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20">
-                            <Shield className="w-5 h-5 text-white" />
-                        </div>
+                        <Image src="/logo.svg" alt="Verifair Logo" width={40} height={40} className="w-10 h-10" />
                         <span className="text-xl font-bold text-white tracking-tight">
                             Verifair
                         </span>
@@ -146,9 +144,7 @@ export default function LoginPage() {
                 <div className="w-full max-w-md space-y-8">
                     {/* Mobile logo */}
                     <div className="lg:hidden flex items-center justify-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-cyan-500 flex items-center justify-center shadow-lg">
-                            <Shield className="w-5 h-5 text-white" />
-                        </div>
+                        <Image src="/logo.svg" alt="Verifair Logo" width={40} height={40} className="w-10 h-10" />
                         <span className="text-xl font-bold text-slate-800 tracking-tight">
                             Veri<span className="text-indigo-600">fair</span>
                         </span>
