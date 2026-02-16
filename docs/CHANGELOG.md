@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.3.0] - 2026-02-17
+
+### Added
+- **Indian Context Bias Detection**: Added specific bias detection for Indian sociological contexts, including:
+  - Caste Bias: Stereotypes related to caste and reservation.
+  - Regional Bias: North vs South Indian stereotypes.
+  - Colorism: Skin tone bias specific to the Indian subcontinent.
+  - Religion: Expanded religious bias detection to include Hindu and Sikh contexts.
+- **Docker Healthchecks**: Added `HEALTHCHECK` instructions to both backend and frontend Dockerfiles for improved container orchestration and reliability.
+
+### Changed
+- Updated `bias_config` with new identity terms and stereotype mappings for the Indian context.
+- Unified versioning across backend and frontend to 3.3.0.
+
+---
+
 ## [3.1.0] - 2025-02-15
 
 ### Added
