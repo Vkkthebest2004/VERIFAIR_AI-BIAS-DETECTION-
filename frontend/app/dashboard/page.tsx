@@ -474,7 +474,7 @@ export default function DashboardPage() {
                                 className="px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold"
                                 style={{ background: "var(--accent-glow)", color: "var(--accent-primary)" }}
                             >
-                                v3.2.0
+                                v3.3.0
                             </span>
                         </div>
                         <p className="text-xs">&copy; {new Date().getFullYear()} Verifair. Bias Audit System.</p>

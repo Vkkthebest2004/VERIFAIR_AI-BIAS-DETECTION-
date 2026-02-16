@@ -634,7 +634,7 @@ export default function ResultPage() {
                     <div className="flex items-center gap-2">
                         <span className="text-slate-500">Verifair</span>
                         <span className="px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400/60 border border-indigo-500/10 font-mono">
-                            v3.2.0
+                            v3.3.0
                         </span>
                     </div>
                     <p>&copy; {new Date().getFullYear()} Verifair</p>
