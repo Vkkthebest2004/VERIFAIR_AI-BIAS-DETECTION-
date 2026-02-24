@@ -18,3 +18,5 @@ statsmodels
 fairlearn
 transformers
 nltk
+faster-whisper
+websockets

@@ -256,9 +256,11 @@ class VerifairSentinel:
     #  CORE ANALYSIS PIPELINE
     # ──────────────────────────────────────────────────────────────────────
 
+    @torch.inference_mode()
     def batch_analyze(self, text_chunks: List[str]) -> List[Dict[str, Any]]:
         """
         Analyze a batch of text chunks using all detection layers.
+        Wrapped in inference_mode() to disable autograd for faster inference.
         """
         if not text_chunks:
             return []

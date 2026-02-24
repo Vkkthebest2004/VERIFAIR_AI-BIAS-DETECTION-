@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.4.0] - 2026-02-24
+
+### Added
+- **Live Audio Co-Pilot**: Real-time audio-based bias auditing via Whisper transcription (`faster-whisper`) with live WebSocket streaming.
+  - New `/audit-audio` endpoint for full recording analysis.
+  - New `live-audit/page.tsx` frontend page with recording and analysis UI.
+  - Live Co-Pilot button added to the dashboard navigation.
+- **Sentinel Registry**: Shared singleton pattern (`sentinel_registry.py`) for efficient model reuse across routes.
+
+### Changed
+- Backend routes refactored to use centralized `get_sentinel()` instead of per-module initialization.
+- Database engine now uses `pool_pre_ping=True` for improved connection resilience.
+- Sentinel `batch_analyze` wrapped in `torch.inference_mode()` for faster inference.
+- Added `ngrok-skip-browser-warning` headers to Axios defaults for tunnel compatibility.
+- Unified versioning across backend and frontend to 3.4.0.
+
+### Fixed
+- Removed duplicate entries in `requirements.txt`.
+
+---
+
 ## [3.3.0] - 2026-02-17
 
 ### Added
@@ -90,6 +111,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[3.4.0]: https://github.com/Vkkthebest2004/VERIFAIR_AI-BIAS-DETECTION-/compare/v3.3.0...v3.4.0
+[3.3.0]: https://github.com/Vkkthebest2004/VERIFAIR_AI-BIAS-DETECTION-/compare/v3.1.0...v3.3.0
 [3.1.0]: https://github.com/Vkkthebest2004/VERIFAIR_AI-BIAS-DETECTION-/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/Vkkthebest2004/VERIFAIR_AI-BIAS-DETECTION-/compare/v2.0.0...v3.0.0
 [2.0.0]: https://github.com/Vkkthebest2004/VERIFAIR_AI-BIAS-DETECTION-/compare/v1.0.0...v2.0.0
