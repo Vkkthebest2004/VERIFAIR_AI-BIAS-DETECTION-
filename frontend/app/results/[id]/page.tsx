@@ -65,12 +65,27 @@ interface WeatAnalysis {
     unpleasant_scores: number[];
 }
 
+// Helper: safely extract a readable string from explanation (may be string or LLM JSON object)
+function safeExplanation(val: unknown): string {
+    if (!val) return '';
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object' && val !== null) {
+        const obj = val as Record<string, unknown>;
+        // Try known string fields first
+        if (typeof obj.explanation === 'string' && obj.explanation) return obj.explanation;
+        if (typeof obj.suggestion === 'string' && obj.suggestion) return obj.suggestion;
+        return JSON.stringify(val);
+    }
+    return String(val);
+}
+
 interface AnalysisResult {
     text_snippet: string;
     is_biased: boolean;
     bias_flags: BiasFlag[];
     topics: AnalysisTopic[];
-    explanation?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    explanation?: any; // May be string or LLM JSON object from legacy DB records
     quality_score?: number;
     advice_disparity?: AdviceDisparity;
     stereotype_analysis?: StereotypeAnalysis;
@@ -511,7 +526,7 @@ export default function ResultPage() {
                                                 {res.explanation && (
                                                     <div className="mt-4 p-3 bg-indigo-900/20 border-l-2 border-indigo-500 rounded-r text-sm text-slate-300">
                                                         <p className="font-semibold text-indigo-300 text-xs uppercase tracking-wide mb-1">Contextual Analysis (Llama 3.2)</p>
-                                                        {res.explanation}
+                                                        {safeExplanation(res.explanation)}
                                                     </div>
                                                 )}
 
@@ -634,7 +649,7 @@ export default function ResultPage() {
                     <div className="flex items-center gap-2">
                         <span className="text-slate-500">Verifair</span>
                         <span className="px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400/60 border border-indigo-500/10 font-mono">
-                            v3.4.0
+                            v3.5.0
                         </span>
                     </div>
                     <p>&copy; {new Date().getFullYear()} Verifair</p>

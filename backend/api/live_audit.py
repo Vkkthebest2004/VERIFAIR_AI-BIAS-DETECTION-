@@ -134,6 +134,12 @@ async def audit_audio(
                 explanation = await ExplainerService.explain_bias(
                     res["text_snippet"], flagged_ids, z_scores, context=context
                 )
+                # Ensure explanation is always a plain string
+                if explanation and not isinstance(explanation, str):
+                    if isinstance(explanation, dict):
+                        explanation = explanation.get("explanation", "") or explanation.get("suggestion", "") or str(explanation)
+                    else:
+                        explanation = str(explanation)
                 res["explanation"] = explanation
         
         total_flags = sum(1 for res in analysis_results if res["is_biased"])

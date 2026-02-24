@@ -11,7 +11,7 @@ import { DragDropUpload } from '@/components/DragDropUpload';
 import {
     Shield, Activity, History, FileText, Loader2, ChevronDown, ChevronUp,
     Sun, Moon, LogOut, BarChart3, Zap, Users, Globe, Sparkles, ArrowRight,
-    Fingerprint,
+    Fingerprint, Brain,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -119,6 +119,7 @@ export default function DashboardPage() {
         { icon: Zap, title: "Hate Speech (3-Layer)", desc: "Dynabench RoBERTa + ToxiGen + Lexicon", color: "#f87171" },
         { icon: Globe, title: "Selection Bias", desc: "Four-Fifths Rule, Chi-Square, adverse impact", color: "#06b6d4" },
         { icon: Fingerprint, title: "Resume Forensics", desc: "Name-proxy, college pedigree, language disparity", color: "#f59e0b" },
+        { icon: Brain, title: "Live Copilot", desc: "Real-time speech bias via Web Speech API + dual-tier AI", color: "#8b5cf6" },
     ];
 
     return (
@@ -176,9 +177,9 @@ export default function DashboardPage() {
                             Resume Forensics
                         </button>
 
-                        {/* NEW: Live Audit */}
+                        {/* Live Copilot (Web Speech API) */}
                         <button
-                            onClick={() => router.push('/live-audit')}
+                            onClick={() => router.push('/live-copilot')}
                             className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98]"
                             style={{
                                 background: "var(--bg-card)",
@@ -191,7 +192,7 @@ export default function DashboardPage() {
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
                             </span>
-                            Live Co-Pilot
+                            Live Copilot
                         </button>
 
                         <button
@@ -492,7 +493,7 @@ export default function DashboardPage() {
                                 className="px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold"
                                 style={{ background: "var(--accent-glow)", color: "var(--accent-primary)" }}
                             >
-                                v3.4.0
+                                v3.5.0
                             </span>
                         </div>
                         <p className="text-xs">&copy; {new Date().getFullYear()} Verifair. Bias Audit System.</p>

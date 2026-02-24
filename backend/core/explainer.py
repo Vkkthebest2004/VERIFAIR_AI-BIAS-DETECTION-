@@ -12,12 +12,24 @@ class ExplainerService:
     using a local LLM (e.g., Llama 3.2 via Ollama).
     Async implementation using httpx.
     """
+    
+    # Class-level flag to skip retries once Ollama is known to be down
+    _ollama_available: Optional[bool] = None
+
+    @classmethod
+    def reset_availability(cls):
+        """Reset the availability flag (call at the start of each request)."""
+        cls._ollama_available = None
 
     @staticmethod
     async def explain_bias(text_snippet: str, identities: list, z_scores: list, context: str = "General") -> Optional[str]:
         """
         Sends the flagged text to the LLM to get a user-friendly explanation.
         """
+        # If Ollama was already found to be unavailable in this request, skip immediately
+        if ExplainerService._ollama_available is False:
+            return None
+
         try:
             # Construct a clear, simple prompt for the average user
             identity_str = ", ".join(identities)
@@ -40,11 +52,12 @@ class ExplainerService:
                 "stream": False
             }
             
-            async with httpx.AsyncClient(timeout=15.0) as client:
+            async with httpx.AsyncClient(timeout=5.0) as client:
                  # Call Ollama API
                  response = await client.post(f"{LLM_HOST}/api/generate", json=payload)
                  
                  if response.status_code == 200:
+                    ExplainerService._ollama_available = True
                     result = response.json()
                     explanation = result.get("response", "").strip()
                     logger.info("Generated explanation via Llama 3.2")
@@ -54,7 +67,12 @@ class ExplainerService:
                     return None
                 
         except httpx.ConnectError:
+            ExplainerService._ollama_available = False
             logger.warning("Could not connect to Ollama. Is Llama 3.2 running? Skipping explanation.")
+            return None
+        except (httpx.ReadTimeout, httpx.ConnectTimeout):
+            ExplainerService._ollama_available = False
+            logger.warning("Ollama timed out. Marking as unavailable for this request.")
             return None
         except Exception as e:
             logger.error(f"Explanation failed: {e}")

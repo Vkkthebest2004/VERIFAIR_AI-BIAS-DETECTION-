@@ -345,7 +345,7 @@ export default function LandingPage() {
                         <Image src="/logo.svg" alt="Verifair Logo" width={32} height={32} className="w-8 h-8" />
                         <span className="font-bold text-slate-700">Verifair</span>
                         <span className="px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 border border-indigo-100 text-xs font-mono">
-                            v3.4.0
+                            v3.5.0
                         </span>
                     </div>
                     <p>&copy; {new Date().getFullYear()} Verifair. Bias Audit System.</p>

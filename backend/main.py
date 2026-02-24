@@ -52,6 +52,13 @@ try:
 except Exception as e:
     logger.error(f"Failed to include live audit router: {e}")
 
+try:
+    from backend.api.live_copilot import router as live_copilot_router
+    app.include_router(live_copilot_router, prefix="/api/v1", tags=["live-copilot"])
+    logger.info("Live Copilot router loaded successfully")
+except Exception as e:
+    logger.error(f"Failed to include live copilot router: {e}")
+
 @app.get("/")
 def root():
     return {

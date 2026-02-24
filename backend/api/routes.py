@@ -75,7 +75,9 @@ async def audit_content(
     async def process_content(name: str, raw_text: str):
         if not raw_text or not raw_text.strip():
             return None
-            
+        
+        # Reset LLM availability for each new audit request
+        ExplainerService.reset_availability()
 
         text_chunks = IngestionService.clean_and_chunk_text(raw_text)
         analysis_results = sentinel.batch_analyze(text_chunks)
@@ -89,6 +91,12 @@ async def audit_content(
                 
                 # Call Llama 3.2
                 explanation = await ExplainerService.explain_bias(res["text_snippet"], flagged_ids, z_scores, context=context)
+                # Ensure explanation is always a plain string (LLM may return JSON)
+                if explanation and not isinstance(explanation, str):
+                    if isinstance(explanation, dict):
+                        explanation = explanation.get("explanation", "") or explanation.get("suggestion", "") or json.dumps(explanation)
+                    else:
+                        explanation = str(explanation)
                 res["explanation"] = explanation
         # -----------------------------------------
 

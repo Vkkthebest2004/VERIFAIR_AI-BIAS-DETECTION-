@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.5.0] - 2026-02-24
+
+### Added
+- Integrated BERT Ensemble models (toxic-bert, RoBERTa hate speech, ToxiGen, mpnet) into the Live Copilot feature.
+- Instant session report generation using statistical aggregation of deep BERT analysis.
+
+### Changed
+- Live Copilot Tier 2 now runs unconditionally on all speech utterances to detect implicit biases.
+- Replaced Ollama LLM dependencies with VerifairSentinel in `live_copilot.py`.
+- Redesigned Live Copilot Scenario Select dropdown and Engine Status card.
+
 ## [3.4.0] - 2026-02-24
 
 ### Added
@@ -111,6 +122,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[3.5.0]: https://github.com/Vkkthebest2004/VERIFAIR_AI-BIAS-DETECTION-/compare/v3.4.0...v3.5.0
 [3.4.0]: https://github.com/Vkkthebest2004/VERIFAIR_AI-BIAS-DETECTION-/compare/v3.3.0...v3.4.0
 [3.3.0]: https://github.com/Vkkthebest2004/VERIFAIR_AI-BIAS-DETECTION-/compare/v3.1.0...v3.3.0
 [3.1.0]: https://github.com/Vkkthebest2004/VERIFAIR_AI-BIAS-DETECTION-/compare/v3.0.0...v3.1.0
