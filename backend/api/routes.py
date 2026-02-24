@@ -1,14 +1,4 @@
 
-from fastapi import APIRouter, UploadFile, File, HTTPException, BackgroundTasks
-from typing import Dict, Any
-import logging
-
-from backend.core.sentinel import VerifairSentinel
-from backend.services.ingestion import IngestionService
-
-router = APIRouter()
-logger = logging.getLogger("VerifairAPI")
-
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, BackgroundTasks, Depends
 from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
@@ -17,7 +7,7 @@ import json
 import numpy as np
 from datetime import datetime
 
-from backend.core.sentinel import VerifairSentinel
+from backend.core.sentinel_registry import get_sentinel
 from backend.services.ingestion import IngestionService
 from backend.core.explainer import ExplainerService
 from backend.core.database import get_db
@@ -47,12 +37,8 @@ def convert_numpy(obj):
         return [convert_numpy(i) for i in obj.tolist()]
     return obj
 
-# Initialize Sentinel
-try:
-    sentinel = VerifairSentinel()
-except Exception as e:
-    logger.critical(f"Failed to initialize Sentinel: {e}")
-    sentinel = None
+# Initialize Sentinel — shared singleton (loaded once, used everywhere)
+sentinel = get_sentinel()
 
 @router.post("/audit", response_model=List[Dict[str, Any]])
 async def audit_content(

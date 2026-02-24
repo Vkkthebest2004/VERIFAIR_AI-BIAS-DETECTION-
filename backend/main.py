@@ -46,6 +46,12 @@ app.add_middleware(
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(api_router, prefix="/api/v1", tags=["audit"])
 
+try:
+    from backend.api.live_audit import router as live_audit_router
+    app.include_router(live_audit_router, prefix="/api/v1", tags=["live-audit"])
+except Exception as e:
+    logger.error(f"Failed to include live audit router: {e}")
+
 @app.get("/")
 def root():
     return {

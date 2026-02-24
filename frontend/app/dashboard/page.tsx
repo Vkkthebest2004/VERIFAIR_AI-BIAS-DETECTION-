@@ -176,6 +176,24 @@ export default function DashboardPage() {
                             Resume Forensics
                         </button>
 
+                        {/* NEW: Live Audit */}
+                        <button
+                            onClick={() => router.push('/live-audit')}
+                            className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98]"
+                            style={{
+                                background: "var(--bg-card)",
+                                border: "1px solid var(--accent-primary)",
+                                color: "var(--accent-primary)",
+                                boxShadow: "0 0 10px rgba(79, 70, 229, 0.2)",
+                            }}
+                        >
+                            <span className="relative flex h-2.5 w-2.5">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                            </span>
+                            Live Co-Pilot
+                        </button>
+
                         <button
                             onClick={toggleTheme}
                             className="p-2.5 rounded-xl transition-all hover:scale-105 active:scale-90"
@@ -474,7 +492,7 @@ export default function DashboardPage() {
                                 className="px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold"
                                 style={{ background: "var(--accent-glow)", color: "var(--accent-primary)" }}
                             >
-                                v3.3.0
+                                v3.4.0
                             </span>
                         </div>
                         <p className="text-xs">&copy; {new Date().getFullYear()} Verifair. Bias Audit System.</p>
