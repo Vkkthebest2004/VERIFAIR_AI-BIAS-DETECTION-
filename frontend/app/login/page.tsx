@@ -14,7 +14,6 @@ import {
     Mail,
     Lock,
     User,
-
 } from "lucide-react";
 
 export default function LoginPage() {
@@ -83,40 +82,38 @@ export default function LoginPage() {
 
     return (
         <div className="relative min-h-screen flex" data-theme="light">
-            {/* ─── Left: Video Background Panel ─── */}
-            <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+            {/* ─── Left: Video Panel ─── */}
+            <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-black">
                 <video
                     ref={videoRef}
                     autoPlay
                     muted
                     loop
                     playsInline
-                    className="absolute inset-0 w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-cover opacity-60"
                 >
                     <source src="/login-bg.mp4" type="video/mp4" />
                 </video>
-                {/* Dark overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/70 via-slate-900/60 to-cyan-900/50"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/20 to-black/50"></div>
 
-                {/* Overlay content */}
-                <div className="relative z-10 flex flex-col justify-between p-12">
-                    <div className="flex items-center gap-3">
-                        <Image src="/logo.svg" alt="Verifair Logo" width={40} height={40} className="w-10 h-10" />
-                        <span className="text-xl font-bold text-white tracking-tight">
+                <div className="relative z-10 flex flex-col justify-between p-10 sm:p-12">
+                    <div className="flex items-center gap-2.5">
+                        <Image src="/logo.svg" alt="Verifair" width={32} height={32} className="w-8 h-8" />
+                        <span className="text-base font-semibold text-white/90 tracking-tight">
                             Verifair
                         </span>
                     </div>
 
-                    <div className="space-y-6 max-w-md">
-                        <h2 className="text-4xl font-bold text-white leading-tight">
-                            Detect Bias. <br />
-                            <span className="text-cyan-300">Ensure Fairness.</span>
+                    <div className="space-y-5 max-w-md">
+                        <h2 className="text-[40px] font-semibold text-white leading-[1.1] tracking-[-0.03em]">
+                            Detect Bias.<br />
+                            <span className="text-[#64d2ff]">Ensure Fairness.</span>
                         </h2>
-                        <p className="text-white/70 text-lg leading-relaxed">
+                        <p className="text-white/60 text-base leading-relaxed">
                             6 Analysis Modules, 473M+ parameters, and 9 peer-reviewed papers — working together to find what humans miss.
                         </p>
 
-                        <div className="flex gap-4 pt-4">
+                        <div className="flex gap-3 pt-2">
                             {[
                                 { label: "Neural Modules", value: "6" },
                                 { label: "Parameters", value: "473M+" },
@@ -124,39 +121,38 @@ export default function LoginPage() {
                             ].map((stat, i) => (
                                 <div
                                     key={i}
-                                    className="px-4 py-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10"
+                                    className="px-4 py-3 rounded-2xl bg-[var(--bg-card)]/[0.08] backdrop-blur-sm border border-white/[0.08]"
                                 >
-                                    <p className="text-2xl font-bold text-white">{stat.value}</p>
-                                    <p className="text-xs text-white/60">{stat.label}</p>
+                                    <p className="text-xl font-semibold text-white">{stat.value}</p>
+                                    <p className="text-[11px] text-white/50">{stat.label}</p>
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    <p className="text-white/40 text-xs">
+                    <p className="text-white/30 text-xs">
                         &copy; {new Date().getFullYear()} Verifair. All rights reserved.
                     </p>
                 </div>
             </div>
 
-            {/* ─── Right: Login Form ─── */}
-            <div className="flex-1 flex items-center justify-center px-8 py-12 bg-gradient-to-br from-slate-50 to-indigo-50/30">
-                <div className="w-full max-w-md space-y-8">
+            {/* ─── Right: Form ─── */}
+            <div className="flex-1 flex items-center justify-center px-6 sm:px-8 py-12 bg-[var(--bg-card)]">
+                <div className="w-full max-w-[400px] space-y-8">
                     {/* Mobile logo */}
-                    <div className="lg:hidden flex items-center justify-center gap-3 mb-4">
-                        <Image src="/logo.svg" alt="Verifair Logo" width={40} height={40} className="w-10 h-10" />
-                        <span className="text-xl font-bold text-slate-800 tracking-tight">
-                            Veri<span className="text-indigo-600">fair</span>
+                    <div className="lg:hidden flex items-center justify-center gap-2.5 mb-4">
+                        <Image src="/logo.svg" alt="Verifair" width={32} height={32} className="w-8 h-8" />
+                        <span className="text-base font-semibold text-[var(--text-primary)] tracking-tight">
+                            Verifair
                         </span>
                     </div>
 
                     {/* Header */}
                     <div className="text-center space-y-2">
-
-                        <h1 className="text-3xl font-bold text-slate-900">
+                        <h1 className="text-[28px] font-semibold text-[var(--text-primary)] tracking-[-0.03em]">
                             {isLogin ? "Welcome back" : "Create your account"}
                         </h1>
-                        <p className="text-slate-500 text-sm">
+                        <p className="text-[var(--text-secondary)] text-sm">
                             {isLogin
                                 ? "Sign in to access your bias analysis dashboard"
                                 : "Join Verifair to start detecting hidden bias"}
@@ -164,18 +160,18 @@ export default function LoginPage() {
                     </div>
 
                     {/* Form */}
-                    <form onSubmit={handleSubmit} className="space-y-5">
+                    <form onSubmit={handleSubmit} className="space-y-4">
                         {!isLogin && (
                             <div className="space-y-1.5">
-                                <label className="block text-sm font-semibold text-slate-700">
+                                <label className="block text-sm font-medium text-[var(--text-primary)]">
                                     Full Name
                                 </label>
                                 <div className="relative">
-                                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                                     <input
                                         type="text"
                                         placeholder="Your name"
-                                        className="w-full pl-11 pr-4 py-3 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 outline-none transition-all"
+                                        className="w-full pl-10 pr-4 py-3 text-sm bg-[var(--bg-secondary)] border border-[#d2d2d7] rounded-xl text-[var(--text-primary)] placeholder:text-[#aeaeb2] focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] outline-none transition-all"
                                         value={fullName}
                                         onChange={(e) => setFullName(e.target.value)}
                                     />
@@ -184,16 +180,16 @@ export default function LoginPage() {
                         )}
 
                         <div className="space-y-1.5">
-                            <label className="block text-sm font-semibold text-slate-700">
+                            <label className="block text-sm font-medium text-[var(--text-primary)]">
                                 Email Address
                             </label>
                             <div className="relative">
-                                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                                 <input
                                     type="email"
                                     required
                                     placeholder="you@example.com"
-                                    className="w-full pl-11 pr-4 py-3 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 outline-none transition-all"
+                                    className="w-full pl-10 pr-4 py-3 text-sm bg-[var(--bg-secondary)] border border-[#d2d2d7] rounded-xl text-[var(--text-primary)] placeholder:text-[#aeaeb2] focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] outline-none transition-all"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
@@ -201,23 +197,23 @@ export default function LoginPage() {
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="block text-sm font-semibold text-slate-700">
+                            <label className="block text-sm font-medium text-[var(--text-primary)]">
                                 Password
                             </label>
                             <div className="relative">
-                                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     required
                                     placeholder="Enter your password"
-                                    className="w-full pl-11 pr-12 py-3 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 outline-none transition-all"
+                                    className="w-full pl-10 pr-12 py-3 text-sm bg-[var(--bg-secondary)] border border-[#d2d2d7] rounded-xl text-[var(--text-primary)] placeholder:text-[#aeaeb2] focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] outline-none transition-all"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
                                 >
                                     {showPassword ? (
                                         <EyeOff className="w-4 h-4" />
@@ -229,7 +225,7 @@ export default function LoginPage() {
                         </div>
 
                         {error && (
-                            <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm text-center">
+                            <div className="p-3 rounded-xl bg-[#ff3b30]/[0.06] border border-[#ff3b30]/10 text-[#ff3b30] text-sm text-center">
                                 {error}
                             </div>
                         )}
@@ -237,7 +233,7 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-3.5 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-xl hover:from-indigo-700 hover:to-indigo-800 transition-all shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="w-full py-3.5 text-sm font-medium text-white bg-[#0071e3] rounded-xl hover:bg-[#0077ed] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {loading ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -260,7 +256,7 @@ export default function LoginPage() {
                                 setIsLogin(!isLogin);
                                 setError("");
                             }}
-                            className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+                            className="text-sm text-[#0071e3] hover:underline font-medium transition-colors"
                         >
                             {isLogin
                                 ? "Don't have an account? Sign up"
@@ -268,11 +264,10 @@ export default function LoginPage() {
                         </button>
                     </div>
 
-                    {/* Back to landing */}
                     <div className="text-center">
                         <button
                             onClick={() => router.push("/landing")}
-                            className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+                            className="text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
                         >
                             &larr; Back to homepage
                         </button>

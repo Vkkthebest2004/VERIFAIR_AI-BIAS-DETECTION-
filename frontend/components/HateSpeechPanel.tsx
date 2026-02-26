@@ -146,7 +146,7 @@ export const HateSpeechPanel: React.FC<HateSpeechPanelProps> = ({ data }) => {
               ${data.hate_detected ? 'text-red-300' : 'text-green-300'}`}>
                             Neural Ensemble Hate Speech Detection
                         </h4>
-                        <p className="text-[10px] text-slate-500 mt-0.5">
+                        <p className="text-[10px] text-[var(--text-secondary)] mt-0.5">
                             3-Layer Ensemble: Dynabench · ToxiGen · Lexicon+Embedding
                         </p>
                     </div>
@@ -169,7 +169,7 @@ export const HateSpeechPanel: React.FC<HateSpeechPanelProps> = ({ data }) => {
             {/* Charts Grid */}
             <div className="p-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {/* Gauge */}
-                <div className="bg-slate-900/60 rounded-lg p-2 border border-slate-800/50">
+                <div className="bg-[var(--bg-primary)]/60 rounded-lg p-2 border border-slate-800/50">
                     <Plot
                         data={gaugeData as any /* plotly types */}
                         layout={{
@@ -183,7 +183,7 @@ export const HateSpeechPanel: React.FC<HateSpeechPanelProps> = ({ data }) => {
                 </div>
 
                 {/* Per-Layer Bars */}
-                <div className="bg-slate-900/60 rounded-lg p-2 border border-slate-800/50">
+                <div className="bg-[var(--bg-primary)]/60 rounded-lg p-2 border border-slate-800/50">
                     <Plot
                         data={layerBarData as any /* plotly types */}
                         layout={{
@@ -216,7 +216,7 @@ export const HateSpeechPanel: React.FC<HateSpeechPanelProps> = ({ data }) => {
                 </div>
 
                 {/* Hate Type Radar */}
-                <div className="bg-slate-900/60 rounded-lg p-2 border border-slate-800/50">
+                <div className="bg-[var(--bg-primary)]/60 rounded-lg p-2 border border-slate-800/50">
                     <Plot
                         data={radarData as any /* plotly types */}
                         layout={{
@@ -251,7 +251,7 @@ export const HateSpeechPanel: React.FC<HateSpeechPanelProps> = ({ data }) => {
             {/* Hate Types Tags */}
             {data.hate_types.length > 0 && (
                 <div className="px-5 pb-4 flex flex-wrap gap-2">
-                    <span className="text-[10px] text-slate-500 uppercase tracking-wider self-center mr-1">Detected Types:</span>
+                    <span className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider self-center mr-1">Detected Types:</span>
                     {data.hate_types.map((type, i) => (
                         <span key={i} className="text-[11px] px-2.5 py-1 rounded-full font-medium
               bg-red-500/10 text-red-300 border border-red-500/20">
@@ -264,25 +264,25 @@ export const HateSpeechPanel: React.FC<HateSpeechPanelProps> = ({ data }) => {
             {/* Score Details Footer */}
             <div className="px-5 pb-4">
                 <div className="grid grid-cols-4 gap-2 text-[11px]">
-                    <div className="bg-slate-800/40 rounded-lg p-2 text-center">
+                    <div className="bg-[var(--bg-secondary)]/40 rounded-lg p-2 text-center">
                         <p className="text-pink-400 font-mono font-bold">{(data.summary.dynabench_score * 100).toFixed(1)}%</p>
-                        <p className="text-slate-500 mt-0.5">Dynabench</p>
-                        <p className="text-slate-600 text-[9px]">Weight: 35%</p>
+                        <p className="text-[var(--text-secondary)] mt-0.5">Dynabench</p>
+                        <p className="text-[var(--text-secondary)] text-[9px]">Weight: 35%</p>
                     </div>
-                    <div className="bg-slate-800/40 rounded-lg p-2 text-center">
+                    <div className="bg-[var(--bg-secondary)]/40 rounded-lg p-2 text-center">
                         <p className="text-orange-400 font-mono font-bold">{(data.summary.toxigen_score * 100).toFixed(1)}%</p>
-                        <p className="text-slate-500 mt-0.5">ToxiGen</p>
-                        <p className="text-slate-600 text-[9px]">Weight: 40%</p>
+                        <p className="text-[var(--text-secondary)] mt-0.5">ToxiGen</p>
+                        <p className="text-[var(--text-secondary)] text-[9px]">Weight: 40%</p>
                     </div>
-                    <div className="bg-slate-800/40 rounded-lg p-2 text-center">
+                    <div className="bg-[var(--bg-secondary)]/40 rounded-lg p-2 text-center">
                         <p className="text-cyan-400 font-mono font-bold">{(data.summary.lexicon_score * 100).toFixed(1)}%</p>
-                        <p className="text-slate-500 mt-0.5">Lexicon</p>
-                        <p className="text-slate-600 text-[9px]">Weight: 25%</p>
+                        <p className="text-[var(--text-secondary)] mt-0.5">Lexicon</p>
+                        <p className="text-[var(--text-secondary)] text-[9px]">Weight: 25%</p>
                     </div>
-                    <div className="bg-slate-800/40 rounded-lg p-2 text-center border border-slate-700/50" style={{ borderColor: `${severityColor}33` }}>
+                    <div className="bg-[var(--bg-secondary)]/40 rounded-lg p-2 text-center border border-slate-700/50" style={{ borderColor: `${severityColor}33` }}>
                         <p className="font-mono font-bold" style={{ color: severityColor }}>{(data.ensemble_score * 100).toFixed(1)}%</p>
-                        <p className="text-slate-500 mt-0.5">Ensemble</p>
-                        <p className="text-slate-600 text-[9px]">Threshold: 35%</p>
+                        <p className="text-[var(--text-secondary)] mt-0.5">Ensemble</p>
+                        <p className="text-[var(--text-secondary)] text-[9px]">Threshold: 35%</p>
                     </div>
                 </div>
             </div>

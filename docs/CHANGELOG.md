@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.6.0] - 2026-02-26
+
+### Added
+- **User Profile Feature**: Implemented a user profile section allowing users to upload and manage profile pictures.
+- **UI/UX Refinements**: Addressed font color issues to improve visibility and contrast across several components.
+
+---
+
 ## [3.5.0] - 2026-02-24
 
 ### Added

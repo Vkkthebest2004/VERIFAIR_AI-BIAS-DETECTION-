@@ -63,27 +63,27 @@ export const SelectionBiasReport: React.FC<{ data: SelectionBiasResult }> = ({ d
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <div className="p-4 bg-slate-800/50 rounded-xl text-center border border-slate-700/50">
-                            <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">Total</p>
+                        <div className="p-4 bg-[var(--bg-secondary)]/50 rounded-xl text-center border border-slate-700/50">
+                            <p className="text-[var(--text-muted)] text-xs uppercase tracking-wider mb-1">Total</p>
                             <p className="text-3xl font-bold text-white">{data.total_candidates}</p>
-                            <p className="text-slate-500 text-[10px]">Candidates</p>
+                            <p className="text-[var(--text-secondary)] text-[10px]">Candidates</p>
                         </div>
-                        <div className="p-4 bg-slate-800/50 rounded-xl text-center border border-slate-700/50">
-                            <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">Selected</p>
+                        <div className="p-4 bg-[var(--bg-secondary)]/50 rounded-xl text-center border border-slate-700/50">
+                            <p className="text-[var(--text-muted)] text-xs uppercase tracking-wider mb-1">Selected</p>
                             <p className="text-3xl font-bold text-white">{data.total_selected}</p>
-                            <p className="text-slate-500 text-[10px]">Candidates</p>
+                            <p className="text-[var(--text-secondary)] text-[10px]">Candidates</p>
                         </div>
-                        <div className="p-4 bg-slate-800/50 rounded-xl text-center border border-slate-700/50">
-                            <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">Select Rate</p>
+                        <div className="p-4 bg-[var(--bg-secondary)]/50 rounded-xl text-center border border-slate-700/50">
+                            <p className="text-[var(--text-muted)] text-xs uppercase tracking-wider mb-1">Select Rate</p>
                             <p className="text-3xl font-bold text-white">{(data.overall_selection_rate * 100).toFixed(1)}%</p>
-                            <p className="text-slate-500 text-[10px]">Overall</p>
+                            <p className="text-[var(--text-secondary)] text-[10px]">Overall</p>
                         </div>
-                        <div className="p-4 bg-slate-800/50 rounded-xl text-center border border-slate-700/50">
-                            <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">Bias Score</p>
+                        <div className="p-4 bg-[var(--bg-secondary)]/50 rounded-xl text-center border border-slate-700/50">
+                            <p className="text-[var(--text-muted)] text-xs uppercase tracking-wider mb-1">Bias Score</p>
                             <p className={`text-3xl font-bold ${data.bias_score > 50 ? 'text-red-400' : 'text-green-400'}`}>
                                 {data.bias_score?.toFixed(1) ?? 0}
                             </p>
-                            <p className="text-slate-500 text-[10px]">/ 100</p>
+                            <p className="text-[var(--text-secondary)] text-[10px]">/ 100</p>
                         </div>
                     </div>
 
@@ -143,17 +143,17 @@ export const SelectionBiasReport: React.FC<{ data: SelectionBiasResult }> = ({ d
 
                                 <div className="space-y-3 text-sm">
                                     <div className="flex justify-between items-center py-1 border-b border-slate-800/50">
-                                        <span className="text-slate-400">Selection Rate</span>
+                                        <span className="text-[var(--text-muted)]">Selection Rate</span>
                                         <span className="text-white font-mono font-bold">{(stats.selection_rate * 100).toFixed(1)}%</span>
                                     </div>
                                     <div className="flex justify-between items-center py-1 border-b border-slate-800/50">
-                                        <span className="text-slate-400">Adverse Impact Ratio</span>
+                                        <span className="text-[var(--text-muted)]">Adverse Impact Ratio</span>
                                         <span className={`font-mono font-bold ${stats.four_fifths_violation ? 'text-red-400' : 'text-emerald-400'}`}>
                                             {stats.adverse_impact_ratio?.toFixed(2) ?? 'N/A'}
                                         </span>
                                     </div>
                                     <div className="flex justify-between items-center py-1 border-b border-slate-800/50">
-                                        <span className="text-slate-400">Demographic Parity Diff</span>
+                                        <span className="text-[var(--text-muted)]">Demographic Parity Diff</span>
                                         <span className={`font-mono ${(stats.demographic_parity_difference || 0) > 0.1 ? 'text-orange-400' : 'text-emerald-400'}`}>
                                             {stats.demographic_parity_difference !== undefined
                                                 ? stats.demographic_parity_difference?.toFixed(3) ?? 'N/A'
@@ -161,19 +161,19 @@ export const SelectionBiasReport: React.FC<{ data: SelectionBiasResult }> = ({ d
                                         </span>
                                     </div>
 
-                                    <div className="pt-2 flex gap-4 text-xs text-slate-500">
+                                    <div className="pt-2 flex gap-4 text-xs text-[var(--text-secondary)]">
                                         <div>
                                             <span className="block mb-0.5">Start</span>
-                                            <span className="text-slate-300 font-mono">{stats.total_candidates}</span>
+                                            <span className="text-[var(--text-faint)] font-mono">{stats.total_candidates}</span>
                                         </div>
                                         <div>
                                             <span className="block mb-0.5">Selected</span>
-                                            <span className="text-slate-300 font-mono">{stats.selected}</span>
+                                            <span className="text-[var(--text-faint)] font-mono">{stats.selected}</span>
                                         </div>
                                         {stats.p_value !== null && (
                                             <div className="ml-auto text-right">
                                                 <span className="block mb-0.5">p-value</span>
-                                                <span className={`font-mono ${stats.p_value < 0.05 ? 'text-orange-400' : 'text-slate-500'}`}>
+                                                <span className={`font-mono ${stats.p_value < 0.05 ? 'text-orange-400' : 'text-[var(--text-secondary)]'}`}>
                                                     {stats.p_value?.toFixed(4)}
                                                 </span>
                                             </div>
@@ -188,17 +188,17 @@ export const SelectionBiasReport: React.FC<{ data: SelectionBiasResult }> = ({ d
 
             {/* Statistical Tests Box */}
             {data.chi_square_test && (
-                <Card className="glass-card bg-slate-900/50 border-dashed border-slate-700">
+                <Card className="glass-card bg-[var(--bg-primary)]/50 border-dashed border-slate-700">
                     <CardContent className="p-5">
-                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Chi-Square Significance Test</h3>
+                        <h3 className="text-sm font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3">Chi-Square Significance Test</h3>
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-sm">
                             <div className="flex gap-6">
                                 <div>
-                                    <span className="text-slate-500 text-xs block">Statistic</span>
+                                    <span className="text-[var(--text-secondary)] text-xs block">Statistic</span>
                                     <span className="text-white font-mono">{data.chi_square_test.statistic?.toFixed(3) ?? 'N/A'}</span>
                                 </div>
                                 <div>
-                                    <span className="text-slate-500 text-xs block">p-value</span>
+                                    <span className="text-[var(--text-secondary)] text-xs block">p-value</span>
                                     <span className={`font-mono font-bold ${data.chi_square_test.significant ? 'text-orange-400' : 'text-emerald-400'}`}>
                                         {data.chi_square_test.p_value?.toFixed(4) ?? 'N/A'}
                                     </span>

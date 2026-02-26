@@ -1,6 +1,6 @@
 {
     "name": "verifair-monorepo",
-    "version": "3.5.0",
+    "version": "3.6.0",
     "private": true,
     "scripts": {
         "setup": "npm install concurrently && echo \"Installing Frontend Dependencies...\" && cd frontend && npm install && echo \"Installing Backend Dependencies...\" && pip install -r ../backend/requirements.txt",

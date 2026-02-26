@@ -11,6 +11,7 @@ interface User {
     id: number;
     email: string;
     full_name: string;
+    profile_picture_url?: string;
 }
 
 interface AuthContextType {
@@ -19,6 +20,7 @@ interface AuthContextType {
     login: (token: string) => void;
     logout: () => void;
     getToken: () => string | null;
+    updateUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -27,6 +29,7 @@ const AuthContext = createContext<AuthContextType>({
     login: () => { },
     logout: () => { },
     getToken: () => null,
+    updateUser: () => { },
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -82,8 +85,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }).catch(e => console.error(e));
     };
 
+    const updateUser = (updatedUser: User) => {
+        setUser(updatedUser);
+    };
+
     return (
-        <AuthContext.Provider value={{ user, loading, login, logout, getToken }}>
+        <AuthContext.Provider value={{ user, loading, login, logout, getToken, updateUser }}>
             {children}
         </AuthContext.Provider>
     );

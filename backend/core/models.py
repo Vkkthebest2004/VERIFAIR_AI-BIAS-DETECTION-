@@ -11,6 +11,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     full_name = Column(String, nullable=True)
+    profile_picture_url = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     audits = relationship("AuditRecord", back_populates="owner")

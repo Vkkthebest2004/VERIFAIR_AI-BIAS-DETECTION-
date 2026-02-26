@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
+from typing import Optional
 from jose import JWTError, jwt
 
 from backend.core.database import get_db
@@ -17,16 +18,21 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
 class UserCreate(BaseModel):
     email: str
     password: str
-    full_name: str = None
+    full_name: Optional[str] = None
 
 class Token(BaseModel):
     access_token: str
     token_type: str
 
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    profile_picture_url: Optional[str] = None
+
 class UserResponse(BaseModel):
     id: int
     email: str
-    full_name: str = None
+    full_name: Optional[str] = None
+    profile_picture_url: Optional[str] = None
     
     class Config:
         from_attributes = True
@@ -85,4 +91,15 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
 @router.get("/me", response_model=UserResponse)
 def read_users_me(current_user: User = Depends(get_current_user)):
+    return current_user
+
+@router.put("/profile", response_model=UserResponse)
+def update_profile(user_update: UserUpdate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user_update.full_name is not None:
+        current_user.full_name = user_update.full_name
+    if user_update.profile_picture_url is not None:
+        current_user.profile_picture_url = user_update.profile_picture_url
+    
+    db.commit()
+    db.refresh(current_user)
     return current_user

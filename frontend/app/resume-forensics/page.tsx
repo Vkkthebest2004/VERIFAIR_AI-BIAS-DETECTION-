@@ -1,26 +1,26 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import { API } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
     ArrowLeft, Upload, AlertTriangle, CheckCircle, CheckCircle2, XCircle, Brain, GraduationCap,
     MessageSquare, Target, Clock, Fingerprint, TrendingDown, Zap, FileText, Users as UsersIcon
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-// Reuse all the type definitions from the original (ForensicsResult, etc.)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface ForensicsResult { total_candidates: number; total_selected: number; total_rejected: number; overall_selection_rate: number; qualification_controlled_bias: any; name_proxy_analysis: any; college_pedigree_analysis: any; language_disparity: any; skill_outcome_mismatch: any; experience_penalty: any; forensics_score: any; bias_detected: boolean; parse_summary?: any; }
 
-function parseCSV(text: string): any[] {
+function parseCSV(text: string): Record<string, unknown>[] {
     const lines = text.split("\n").filter(l => l.trim());
     if (lines.length < 2) return [];
     const headers = lines[0].split(",").map(h => h.trim());
     return lines.slice(1).map(line => {
         const values = line.split(",").map(v => v.trim());
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const obj: any = {};
         headers.forEach((h, i) => {
             const lh = h.toLowerCase(), v = values[i] || "";
@@ -40,37 +40,54 @@ function parseCSV(text: string): any[] {
     });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ModuleCard({ icon: Icon, title, description, biasDetected, children, color }: any) {
     return (
-        <Card className={`glass-card border-2 ${biasDetected ? "border-red-500/40" : "border-slate-700/50"}`}>
-            <CardContent className="p-6">
+        <div className={cn(
+            "rounded-2xl overflow-hidden border-2 transition-all",
+            biasDetected ? "border-[#ff3b30]/20" : "border-[var(--border-primary)]"
+        )} style={{ background: "var(--bg-card)", boxShadow: "var(--shadow-card)" }}>
+            <div className="p-5 sm:p-6">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                         <div className={`p-2.5 rounded-xl ${color}`}><Icon className="w-5 h-5" /></div>
-                        <div><h3 className="text-lg font-bold text-white">{title}</h3><p className="text-xs text-slate-400">{description}</p></div>
+                        <div><h3 className="text-base font-semibold">{title}</h3><p className="text-[11px]" style={{ color: "var(--text-muted)" }}>{description}</p></div>
                     </div>
-                    {biasDetected ? <span className="px-3 py-1 bg-red-500/20 text-red-400 text-xs font-bold rounded-full"><AlertTriangle className="w-3.5 h-3.5 inline mr-1" />Bias</span> : <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-bold rounded-full"><CheckCircle className="w-3.5 h-3.5 inline mr-1" />Fair</span>}
+                    {biasDetected ? (
+                        <span className="px-2.5 py-1 bg-[#ff3b30]/[0.08] text-[#ff3b30] text-[11px] font-semibold rounded-full flex items-center gap-1">
+                            <AlertTriangle className="w-3 h-3" />Bias
+                        </span>
+                    ) : (
+                        <span className="px-2.5 py-1 bg-[#34c759]/[0.08] text-[#34c759] text-[11px] font-semibold rounded-full flex items-center gap-1">
+                            <CheckCircle className="w-3 h-3" />Fair
+                        </span>
+                    )}
                 </div>
                 {children}
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     );
 }
 
 function ScoreGauge({ score, severity }: { score: number; severity: string }) {
-    const color = severity === "Critical" ? "from-red-500 to-rose-600" : severity === "High" ? "from-orange-500 to-amber-500" : "from-emerald-400 to-cyan-400";
-    const textColor = severity === "Critical" ? "text-red-400" : severity === "High" ? "text-orange-400" : "text-emerald-400";
+    const color = severity === "Critical" ? "from-[#ff3b30] to-[#ff6961]" : severity === "High" ? "from-[#ff9500] to-[#ffcc00]" : "from-[#34c759] to-[#32ade6]";
+    const textColor = severity === "Critical" ? "text-[#ff3b30]" : severity === "High" ? "text-[#ff9500]" : "text-[#34c759]";
     return (
         <div className="flex items-center gap-6">
-            <div className="relative w-32 h-32">
+            <div className="relative w-28 h-28 sm:w-32 sm:h-32">
                 <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(51,65,85,0.5)" strokeWidth="8" />
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="url(#g)" strokeWidth="8" strokeLinecap="round" strokeDasharray={`${(score / 100) * 264} 264`} />
-                    <defs><linearGradient id="g"><stop offset="0%" stopColor="#ef4444" /><stop offset="100%" stopColor="#06b6d4" /></linearGradient></defs>
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="var(--bg-secondary)" strokeWidth="6" />
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="url(#gaugeGrad)" strokeWidth="6" strokeLinecap="round" strokeDasharray={`${(score / 100) * 264} 264`} />
+                    <defs><linearGradient id="gaugeGrad"><stop offset="0%" stopColor="#ff3b30" /><stop offset="100%" stopColor="#32ade6" /></linearGradient></defs>
                 </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center"><span className={`text-2xl font-bold bg-gradient-to-b ${color} bg-clip-text text-transparent`}>{score}</span></div>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className={`text-2xl font-bold bg-gradient-to-b ${color} bg-clip-text text-transparent`}>{score}</span>
+                </div>
             </div>
-            <div><p className={`text-xl font-bold ${textColor}`}>{severity}</p><p className="text-slate-400 text-sm">Score</p></div>
+            <div>
+                <p className={`text-xl font-bold ${textColor}`}>{severity}</p>
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>Forensics Score</p>
+            </div>
         </div>
     );
 }
@@ -82,6 +99,7 @@ export default function ResumeForensicsPage() {
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const [rejectedFiles, setRejectedFiles] = useState<File[]>([]);
     const [csvFile, setCsvFile] = useState<File | null>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [candidates, setCandidates] = useState<any[]>([]);
     const [analyzing, setAnalyzing] = useState(false);
     const [result, setResult] = useState<ForensicsResult | null>(null);
@@ -112,13 +130,8 @@ export default function ResumeForensicsPage() {
     const handleAnalyze = async () => {
         const token = getToken();
         if (!token) { router.push("/landing"); return; }
-
-        if (mode === "csv" && candidates.length < 5) {
-            alert("Need at least 5 candidates"); return;
-        }
-        if (mode === "pdf" && totalFiles < 2) {
-            alert("Upload at least 1 selected & 1 rejected resume"); return;
-        }
+        if (mode === "csv" && candidates.length < 5) { alert("Need at least 5 candidates"); return; }
+        if (mode === "pdf" && totalFiles < 2) { alert("Upload at least 1 selected & 1 rejected resume"); return; }
 
         setAnalyzing(true);
         setResult(null);
@@ -134,6 +147,7 @@ export default function ResumeForensicsPage() {
                 const res = await axios.post(`${API}/upload-resume-forensics`, formData, { headers: { Authorization: `Bearer ${token}` } });
                 setResult(res.data.analysis);
             }
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error(error);
             if (axios.isAxiosError(error) && error.response?.status === 401) { logout(); return; }
@@ -144,106 +158,175 @@ export default function ResumeForensicsPage() {
     };
 
     return (
-        <main className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 md:p-8">
-            <div className="max-w-7xl mx-auto">
-                <div className="mb-8 flex items-center justify-between">
+        <main className="min-h-screen font-sans" style={{ background: "var(--bg-secondary)", color: "var(--text-primary)" }}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+
+                {/* Header */}
+                <div className="mb-8 sm:mb-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                        <Button onClick={() => router.push("/dashboard")} className="glass-card"><ArrowLeft className="w-4 h-4 mr-2" />Back</Button>
-                        <div><h1 className="text-3xl font-bold gradient-text">Resume Forensics</h1><p className="text-slate-400 text-sm">Hiring Bias Detection for Indian IT</p></div>
+                        <button onClick={() => router.push("/dashboard")} className="text-sm font-medium flex items-center gap-1.5 hover:underline" style={{ color: "var(--accent)" }}>
+                            <ArrowLeft className="w-4 h-4" /> Back
+                        </button>
+                        <div>
+                            <h1 className="text-[28px] sm:text-[36px] font-semibold tracking-[-0.03em] gradient-text">Resume Forensics</h1>
+                            <p className="text-xs" style={{ color: "var(--text-muted)" }}>Hiring Bias Detection for Indian IT</p>
+                        </div>
                     </div>
-                    <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-lg px-4 py-2"><Zap className="w-4 h-4 text-indigo-400 inline mr-2" /><span className="text-indigo-300 text-xs">6 Modules • 50 Batch Limit</span></div>
+                    <div className="px-4 py-2 rounded-xl flex items-center gap-2" style={{ background: "var(--accent-soft)", border: "1px solid var(--accent)", borderColor: "rgba(0,113,227,0.15)" }}>
+                        <Zap className="w-3.5 h-3.5" style={{ color: "var(--accent)" }} />
+                        <span className="text-xs font-medium" style={{ color: "var(--accent)" }}>6 Modules · 50 Batch Limit</span>
+                    </div>
                 </div>
 
-                <Card className="glass-card mb-8">
-                    <CardContent className="p-6">
-                        <h2 className="text-2xl font-semibold text-white mb-4">Upload Mode</h2>
-                        <div className="flex gap-4 mb-6">
-                            <button onClick={() => setMode("pdf")} className={`px-6 py-3 rounded-lg font-medium transition ${mode === "pdf" ? "bg-indigo-600 text-white" : "bg-slate-800 text-slate-300"}`}><FileText className="w-5 h-5 inline mr-2" />PDF Resumes</button>
-                            <button onClick={() => setMode("csv")} className={`px-6 py-3 rounded-lg font-medium transition ${mode === "csv" ? "bg-indigo-600 text-white" : "bg-slate-800 text-slate-300"}`}><FileText className="w-5 h-5 inline mr-2" />CSV Data</button>
+                {/* Upload Card */}
+                <div className="rounded-2xl overflow-hidden mb-8" style={{ background: "var(--bg-card)", border: "1px solid var(--border-primary)", boxShadow: "var(--shadow-card)" }}>
+                    <div className="p-5 sm:p-8">
+                        <h2 className="text-lg font-semibold mb-5">Upload Mode</h2>
+
+                        {/* Mode Tabs */}
+                        <div className="flex gap-2 mb-6">
+                            {[
+                                { m: "pdf" as const, icon: FileText, label: "PDF Resumes" },
+                                { m: "csv" as const, icon: FileText, label: "CSV Data" },
+                            ].map(({ m, icon: Icon, label }) => (
+                                <button
+                                    key={m}
+                                    onClick={() => setMode(m)}
+                                    className={cn(
+                                        "px-5 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2",
+                                        mode === m ? "text-white" : ""
+                                    )}
+                                    style={{
+                                        background: mode === m ? "var(--accent)" : "var(--bg-secondary)",
+                                        color: mode === m ? "#fff" : "var(--text-secondary)",
+                                        border: mode === m ? "none" : "1px solid var(--border-primary)",
+                                    }}
+                                >
+                                    <Icon className="w-4 h-4" /> {label}
+                                </button>
+                            ))}
                         </div>
 
                         {mode === "pdf" ? (
-                            <div className="space-y-6">
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div className="p-6 bg-emerald-900/10 border-2 border-dashed border-emerald-500/30 rounded-xl">
-                                        <UsersIcon className="w-8 h-8 text-emerald-400 mb-3" />
-                                        <h3 className="text-lg font-bold text-emerald-400 mb-2 flex items-center gap-2"><CheckCircle2 className="w-5 h-5" /> Selected Resumes</h3>
+                            <div className="space-y-5">
+                                <div className="grid sm:grid-cols-2 gap-5">
+                                    {/* Selected */}
+                                    <div className="p-5 rounded-2xl border-2 border-dashed border-[#34c759]/30 bg-[#34c759]/[0.02]">
+                                        <UsersIcon className="w-7 h-7 text-[#34c759] mb-3" />
+                                        <h3 className="text-base font-semibold text-[#34c759] mb-2 flex items-center gap-2">
+                                            <CheckCircle2 className="w-4 h-4" /> Selected Resumes
+                                        </h3>
                                         <input type="file" accept=".pdf,.txt" multiple onChange={(e) => handlePDFUpload(e, "selected")} className="hidden" id="sel" />
-                                        <label htmlFor="sel" className="block px-4 py-2 bg-emerald-600 text-white rounded-lg cursor-pointer text-center hover:bg-emerald-700"><Upload className="w-4 h-4 inline mr-2" />Upload PDFs ({selectedFiles.length}/50)</label>
-                                        {selectedFiles.map((f, i) => <div key={i} className="mt-2 flex items-center justify-between text-sm bg-slate-800/50 px-3 py-2 rounded"><span className="text-emerald-300 truncate">{f.name}</span><button onClick={() => removeFile("selected", i)} className="text-red-400 hover:text-red-300">×</button></div>)}
+                                        <label htmlFor="sel" className="block px-4 py-2 bg-[#34c759] text-white rounded-xl cursor-pointer text-center text-sm font-medium hover:bg-[#2db84e] transition-all">
+                                            <Upload className="w-4 h-4 inline mr-2" />Upload ({selectedFiles.length}/50)
+                                        </label>
+                                        {selectedFiles.map((f, i) => (
+                                            <div key={i} className="mt-2 flex items-center justify-between text-sm px-3 py-2 rounded-xl" style={{ background: "var(--bg-secondary)" }}>
+                                                <span className="text-[#34c759] truncate text-xs">{f.name}</span>
+                                                <button onClick={() => removeFile("selected", i)} className="text-[#ff3b30] hover:text-[#ff6961] text-xs">×</button>
+                                            </div>
+                                        ))}
                                     </div>
-                                    <div className="p-6 bg-red-900/10 border-2 border-dashed border-red-500/30 rounded-xl">
-                                        <UsersIcon className="w-8 h-8 text-red-400 mb-3" />
-                                        <h3 className="text-lg font-bold text-red-400 mb-2 flex items-center gap-2"><XCircle className="w-5 h-5" /> Rejected Resumes</h3>
+                                    {/* Rejected */}
+                                    <div className="p-5 rounded-2xl border-2 border-dashed border-[#ff3b30]/30 bg-[#ff3b30]/[0.02]">
+                                        <UsersIcon className="w-7 h-7 text-[#ff3b30] mb-3" />
+                                        <h3 className="text-base font-semibold text-[#ff3b30] mb-2 flex items-center gap-2">
+                                            <XCircle className="w-4 h-4" /> Rejected Resumes
+                                        </h3>
                                         <input type="file" accept=".pdf,.txt" multiple onChange={(e) => handlePDFUpload(e, "rejected")} className="hidden" id="rej" />
-                                        <label htmlFor="rej" className="block px-4 py-2 bg-red-600 text-white rounded-lg cursor-pointer text-center hover:bg-red-700"><Upload className="w-4 h-4 inline mr-2" />Upload PDFs ({rejectedFiles.length}/50)</label>
-                                        {rejectedFiles.map((f, i) => <div key={i} className="mt-2 flex items-center justify-between text-sm bg-slate-800/50 px-3 py-2 rounded"><span className="text-red-300 truncate">{f.name}</span><button onClick={() => removeFile("rejected", i)} className="text-red-400 hover:text-red-300">×</button></div>)}
+                                        <label htmlFor="rej" className="block px-4 py-2 bg-[#ff3b30] text-white rounded-xl cursor-pointer text-center text-sm font-medium hover:bg-[#ff6961] transition-all">
+                                            <Upload className="w-4 h-4 inline mr-2" />Upload ({rejectedFiles.length}/50)
+                                        </label>
+                                        {rejectedFiles.map((f, i) => (
+                                            <div key={i} className="mt-2 flex items-center justify-between text-sm px-3 py-2 rounded-xl" style={{ background: "var(--bg-secondary)" }}>
+                                                <span className="text-[#ff3b30] truncate text-xs">{f.name}</span>
+                                                <button onClick={() => removeFile("rejected", i)} className="text-[#ff3b30] hover:text-[#ff6961] text-xs">×</button>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
-                                <p className="text-slate-400 text-sm">Total: {totalFiles}/50 resumes • PDFs are auto-parsed for name, college, skills, experience</p>
+                                <p className="text-xs" style={{ color: "var(--text-muted)" }}>Total: {totalFiles}/50 resumes · PDFs auto-parsed</p>
                             </div>
                         ) : (
                             <div>
-                                <p className="text-slate-400 text-sm mb-4">Upload CSV with columns: Name, Identity, Selected, Score, College, Skills, Notes</p>
+                                <p className="text-xs mb-4" style={{ color: "var(--text-muted)" }}>Upload CSV with columns: Name, Identity, Selected, Score, College, Skills, Notes</p>
                                 <input type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" id="csv" />
-                                <label htmlFor="csv" className="inline-block px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg cursor-pointer"><Upload className="w-5 h-5 inline mr-2" />Choose CSV</label>
-                                {csvFile && <span className="ml-4 text-green-400">{csvFile.name} ({candidates.length} candidates)</span>}
+                                <label htmlFor="csv" className="inline-block px-5 py-2.5 text-sm font-medium text-white rounded-xl cursor-pointer transition-all" style={{ background: "var(--accent)" }}>
+                                    <Upload className="w-4 h-4 inline mr-2" />Choose CSV
+                                </label>
+                                {csvFile && <span className="ml-4 text-sm text-[#34c759] font-medium">{csvFile.name} ({candidates.length} candidates)</span>}
                             </div>
                         )}
 
                         {((mode === "pdf" && totalFiles >= 2) || (mode === "csv" && candidates.length >= 5)) && (
-                            <Button onClick={handleAnalyze} disabled={analyzing} className="mt-6 bg-purple-600 hover:bg-purple-700 text-white px-8 py-3">
-                                {analyzing ? <><span className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full inline-block mr-2" />Analyzing...</> : `Analyze ${mode === "pdf" ? totalFiles : candidates.length} Candidates`}
-                            </Button>
+                            <button
+                                onClick={handleAnalyze}
+                                disabled={analyzing}
+                                className="mt-6 px-7 py-3 text-sm font-semibold text-white rounded-xl transition-all active:scale-[0.98] disabled:opacity-50"
+                                style={{ background: "#af52de" }}
+                            >
+                                {analyzing ? (
+                                    <><span className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full inline-block mr-2" />Analyzing...</>
+                                ) : `Analyze ${mode === "pdf" ? totalFiles : candidates.length} Candidates`}
+                            </button>
                         )}
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
 
+                {/* Results */}
                 {result && (
-                    <div className="space-y-6 animate-fade-in-up">
-                        <Card className="glass-card border-2 border-indigo-500/30">
-                            <CardContent className="p-6">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div><h2 className="text-2xl font-bold text-white">Summary</h2></div>
+                    <div className="space-y-5 animate-fade-in-up">
+                        {/* Summary */}
+                        <div className="rounded-2xl overflow-hidden border-2" style={{ background: "var(--bg-card)", borderColor: "rgba(0,113,227,0.15)", boxShadow: "var(--shadow-card)" }}>
+                            <div className="p-5 sm:p-8">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-5 gap-4">
+                                    <h2 className="text-xl font-bold">Summary</h2>
                                     <ScoreGauge score={result.forensics_score.overall_score} severity={result.forensics_score.severity} />
                                 </div>
-                                <div className="grid grid-cols-4 gap-4">
-                                    <div className="p-3 bg-slate-800/60 rounded-xl text-center"><p className="text-slate-400 text-xs">Total</p><p className="text-2xl font-bold text-white">{result.total_candidates}</p></div>
-                                    <div className="p-3 bg-slate-800/60 rounded-xl text-center"><p className="text-slate-400 text-xs">Selected</p><p className="text-2xl font-bold text-emerald-400">{result.total_selected}</p></div>
-                                    <div className="p-3 bg-slate-800/60 rounded-xl text-center"><p className="text-slate-400 text-xs">Rejected</p><p className="text-2xl font-bold text-red-400">{result.total_rejected}</p></div>
-                                    <div className="p-3 bg-slate-800/60 rounded-xl text-center"><p className="text-slate-400 text-xs">Modules Flagged</p><p className="text-2xl font-bold text-orange-400">{result.forensics_score.modules_flagged}/6</p></div>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    {[
+                                        { l: "Total", v: result.total_candidates, c: "var(--text-primary)" },
+                                        { l: "Selected", v: result.total_selected, c: "#34c759" },
+                                        { l: "Rejected", v: result.total_rejected, c: "#ff3b30" },
+                                        { l: "Modules Flagged", v: `${result.forensics_score.modules_flagged}/6`, c: "#ff9500" },
+                                    ].map((s, i) => (
+                                        <div key={i} className="p-3 rounded-xl text-center" style={{ background: "var(--bg-secondary)" }}>
+                                            <p className="text-[10px] uppercase tracking-wider font-medium" style={{ color: "var(--text-muted)" }}>{s.l}</p>
+                                            <p className="text-xl font-bold" style={{ color: s.c }}>{s.v}</p>
+                                        </div>
+                                    ))}
                                 </div>
                                 {result.forensics_score.key_findings?.length > 0 && (
-                                    <div className="mt-6 p-4 bg-red-900/15 border-l-4 border-red-500 rounded-r">
-                                        <p className="text-red-300 font-semibold mb-2"><AlertTriangle className="w-4 h-4 inline mr-2" />Key Findings</p>
-                                        <ul>{result.forensics_score.key_findings.map((f: string, i: number) => <li key={i} className="text-red-200/80 text-sm">• {f}</li>)}</ul>
+                                    <div className="mt-6 p-4 bg-[#ff3b30]/[0.04] border-l-[3px] border-[#ff3b30] rounded-r-xl">
+                                        <p className="text-[#ff3b30] font-semibold mb-2 flex items-center gap-1.5 text-sm"><AlertTriangle className="w-4 h-4" />Key Findings</p>
+                                        <ul>{result.forensics_score.key_findings.map((f: string, i: number) => <li key={i} className="text-[#ff3b30]/80 text-sm">• {f}</li>)}</ul>
                                     </div>
                                 )}
-                            </CardContent>
-                        </Card>
+                            </div>
+                        </div>
 
-                        <ModuleCard icon={Brain} title="Qualification-Controlled Bias" description="Equalized odds analysis" biasDetected={result.qualification_controlled_bias.bias_detected} color="bg-purple-500/20 text-purple-400">
-                            <p className="text-slate-400 text-sm">{result.qualification_controlled_bias.note || "Analysis complete"}</p>
+                        <ModuleCard icon={Brain} title="Qualification-Controlled Bias" description="Equalized odds analysis" biasDetected={result.qualification_controlled_bias.bias_detected} color="bg-[#af52de]/[0.12] text-[#af52de]">
+                            <p className="text-sm" style={{ color: "var(--text-muted)" }}>{result.qualification_controlled_bias.note || "Analysis complete"}</p>
                         </ModuleCard>
 
-                        <ModuleCard icon={Fingerprint} title="Name-Proxy Bias" description="Surname-community correlation" biasDetected={result.name_proxy_analysis.bias_detected} color="bg-amber-500/20 text-amber-400">
-                            <p className="text-slate-400 text-sm">{result.name_proxy_analysis.note || `Max disparity: ${((result.name_proxy_analysis.max_disparity || 0) * 100).toFixed(1)}%`}</p>
+                        <ModuleCard icon={Fingerprint} title="Name-Proxy Bias" description="Surname-community correlation" biasDetected={result.name_proxy_analysis.bias_detected} color="bg-[#ff9500]/[0.12] text-[#ff9500]">
+                            <p className="text-sm" style={{ color: "var(--text-muted)" }}>{result.name_proxy_analysis.note || `Max disparity: ${((result.name_proxy_analysis.max_disparity || 0) * 100).toFixed(1)}%`}</p>
                         </ModuleCard>
 
-                        <ModuleCard icon={GraduationCap} title="College Pedigree Bias" description="IIT/NIT preference detection" biasDetected={result.college_pedigree_analysis.bias_detected} color="bg-cyan-500/20 text-cyan-400">
-                            {result.college_pedigree_analysis.pedigree_premium && <p className="text-slate-300 text-sm">Tier-1 selected at <strong>{result.college_pedigree_analysis.pedigree_premium}x</strong> rate vs Tier-3</p>}
+                        <ModuleCard icon={GraduationCap} title="College Pedigree Bias" description="IIT/NIT preference detection" biasDetected={result.college_pedigree_analysis.bias_detected} color="bg-[#32ade6]/[0.12] text-[#32ade6]">
+                            {result.college_pedigree_analysis.pedigree_premium && <p className="text-sm" style={{ color: "var(--text-secondary)" }}>Tier-1 selected at <strong>{result.college_pedigree_analysis.pedigree_premium}x</strong> rate vs Tier-3</p>}
                         </ModuleCard>
 
-                        <ModuleCard icon={MessageSquare} title="Language Disparity" description="Interviewer note sentiment" biasDetected={result.language_disparity.bias_detected} color="bg-rose-500/20 text-rose-400">
-                            <p className="text-slate-400 text-sm">{result.language_disparity.coded_bias_detected?.length || 0} coded bias terms found</p>
+                        <ModuleCard icon={MessageSquare} title="Language Disparity" description="Interviewer note sentiment" biasDetected={result.language_disparity.bias_detected} color="bg-[#ff3b30]/[0.12] text-[#ff3b30]">
+                            <p className="text-sm" style={{ color: "var(--text-muted)" }}>{result.language_disparity.coded_bias_detected?.length || 0} coded bias terms found</p>
                         </ModuleCard>
 
-                        <ModuleCard icon={Target} title="Skill-Outcome Mismatch" description="Score threshold disparity" biasDetected={result.skill_outcome_mismatch.bias_detected} color="bg-indigo-500/20 text-indigo-400">
-                            <p className="text-slate-400 text-sm">{result.skill_outcome_mismatch.finding || "No threshold disparity"}</p>
+                        <ModuleCard icon={Target} title="Skill-Outcome Mismatch" description="Score threshold disparity" biasDetected={result.skill_outcome_mismatch.bias_detected} color="bg-[#0071e3]/[0.12] text-[#0071e3]">
+                            <p className="text-sm" style={{ color: "var(--text-muted)" }}>{result.skill_outcome_mismatch.finding || "No threshold disparity"}</p>
                         </ModuleCard>
 
-                        <ModuleCard icon={Clock} title="Experience Penalty" description="Experience correlation check" biasDetected={result.experience_penalty.bias_detected} color="bg-teal-500/20 text-teal-400">
-                            {result.experience_penalty.experience_selection_correlation !== undefined && <p className="text-slate-400 text-sm">Correlation: {result.experience_penalty.experience_selection_correlation > 0 ? "+" : ""}{result.experience_penalty.experience_selection_correlation}</p>}
+                        <ModuleCard icon={Clock} title="Experience Penalty" description="Experience correlation check" biasDetected={result.experience_penalty.bias_detected} color="bg-[#34c759]/[0.12] text-[#34c759]">
+                            {result.experience_penalty.experience_selection_correlation !== undefined && <p className="text-sm" style={{ color: "var(--text-muted)" }}>Correlation: {result.experience_penalty.experience_selection_correlation > 0 ? "+" : ""}{result.experience_penalty.experience_selection_correlation}</p>}
                         </ModuleCard>
                     </div>
                 )}

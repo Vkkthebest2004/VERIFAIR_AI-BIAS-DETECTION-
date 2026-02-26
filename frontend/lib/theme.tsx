@@ -1,8 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 
-type Theme = "dark" | "light";
+type Theme = "light" | "dark";
 
 interface ThemeContextType {
     theme: Theme;
@@ -10,30 +10,43 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-    theme: "dark",
+    theme: "light",
     toggleTheme: () => { },
 });
 
 export const useTheme = () => useContext(ThemeContext);
 
+function getInitialTheme(): Theme {
+    if (typeof window === "undefined") return "light";
+    return (localStorage.getItem("verifair-theme") as Theme) || "light";
+}
+
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     children,
 }) => {
-    const [theme, setTheme] = useState<Theme>("dark");
+    const [theme, setTheme] = useState<Theme>(getInitialTheme);
+    const mounted = useRef(false);
 
-    useEffect(() => {
-        const saved = localStorage.getItem("verifair-theme") as Theme;
-        if (saved) {
-            setTheme(saved);
-            document.documentElement.setAttribute("data-theme", saved);
+    const applyTheme = (t: Theme) => {
+        document.documentElement.setAttribute("data-theme", t);
+        if (t === "dark") {
+            document.documentElement.classList.add("dark");
+        } else {
+            document.documentElement.classList.remove("dark");
         }
-    }, []);
+    };
+
+    // Apply theme on mount (no setState needed since initial state is already correct)
+    useEffect(() => {
+        applyTheme(theme);
+        mounted.current = true;
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const toggleTheme = () => {
         const next = theme === "dark" ? "light" : "dark";
         setTheme(next);
         localStorage.setItem("verifair-theme", next);
-        document.documentElement.setAttribute("data-theme", next);
+        applyTheme(next);
     };
 
     return (

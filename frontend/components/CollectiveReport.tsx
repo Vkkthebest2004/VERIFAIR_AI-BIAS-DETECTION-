@@ -81,7 +81,7 @@ export function CollectiveReport({ data }: Props) {
                         <h2 className="text-3xl font-bold text-white mb-2">
                             Sentinel Engine Analysis
                         </h2>
-                        <p className="text-slate-400 text-lg">
+                        <p className="text-[var(--text-muted)] text-lg">
                             Aggregated insights across <span className="text-white font-semibold">{data.total_files} documents</span> and <span className="text-white font-semibold">{data.total_sentences} data points</span>.
                         </p>
                     </div>
@@ -94,7 +94,7 @@ export function CollectiveReport({ data }: Props) {
                                     cx="64" cy="64" r="56"
                                     stroke="currentColor" strokeWidth="8"
                                     fill="transparent"
-                                    className="text-slate-800"
+                                    className="text-[var(--text-primary)]"
                                 />
                                 <circle
                                     cx="64" cy="64" r="56"
@@ -115,7 +115,7 @@ export function CollectiveReport({ data }: Props) {
                                     }`}>
                                     {data.fairness_score.toFixed(0)}
                                 </span>
-                                <span className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold mt-1">Fairness</span>
+                                <span className="text-[10px] text-[var(--text-secondary)] uppercase tracking-widest font-semibold mt-1">Fairness</span>
                             </div>
                         </div>
                     </div>
@@ -124,37 +124,37 @@ export function CollectiveReport({ data }: Props) {
 
             {/* ─── KEY METRICS ROW ─── */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="glass-panel border-indigo-500/10 bg-slate-900/40">
+                <Card className="glass-panel border-indigo-500/10 bg-[var(--bg-primary)]/40">
                     <CardContent className="p-6 flex flex-col items-center justify-center text-center">
                         <Shield className="w-8 h-8 text-indigo-400 mb-2 opacity-80" />
                         <span className="text-3xl font-bold text-white">{data.total_bias_flags}</span>
-                        <span className="text-xs text-slate-500 uppercase tracking-wider mt-1">Total Flags</span>
+                        <span className="text-xs text-[var(--text-secondary)] uppercase tracking-wider mt-1">Total Flags</span>
                     </CardContent>
                 </Card>
 
-                <Card className="glass-panel border-indigo-500/10 bg-slate-900/40">
+                <Card className="glass-panel border-indigo-500/10 bg-[var(--bg-primary)]/40">
                     <CardContent className="p-6 flex flex-col items-center justify-center text-center">
                         <Activity className="w-8 h-8 text-cyan-400 mb-2 opacity-80" />
                         <span className="text-3xl font-bold text-white">{data.average_bias_intensity.toFixed(2)}σ</span>
-                        <span className="text-xs text-slate-500 uppercase tracking-wider mt-1">Avg. Bias Intensity</span>
+                        <span className="text-xs text-[var(--text-secondary)] uppercase tracking-wider mt-1">Avg. Bias Intensity</span>
                     </CardContent>
                 </Card>
 
-                <Card className="glass-panel border-indigo-500/10 bg-slate-900/40">
+                <Card className="glass-panel border-indigo-500/10 bg-[var(--bg-primary)]/40">
                     <CardContent className="p-6 flex flex-col items-center justify-center text-center">
                         <AlertTriangle className="w-8 h-8 text-orange-400 mb-2 opacity-80" />
                         <span className="text-3xl font-bold text-white truncate max-w-full px-2" title={data.most_biased_file || "None"}>
                             {data.most_biased_file ? "Found" : "None"}
                         </span>
-                        <span className="text-xs text-slate-500 uppercase tracking-wider mt-1">Most Biased Input</span>
+                        <span className="text-xs text-[var(--text-secondary)] uppercase tracking-wider mt-1">Most Biased Input</span>
                     </CardContent>
                 </Card>
 
-                <Card className="glass-panel border-indigo-500/10 bg-slate-900/40">
+                <Card className="glass-panel border-indigo-500/10 bg-[var(--bg-primary)]/40">
                     <CardContent className="p-6 flex flex-col items-center justify-center text-center">
                         <BarChart3 className="w-8 h-8 text-emerald-400 mb-2 opacity-80" />
                         <span className="text-3xl font-bold text-white">{data.bias_load.toFixed(0)}</span>
-                        <span className="text-xs text-slate-500 uppercase tracking-wider mt-1">System Bias Load</span>
+                        <span className="text-xs text-[var(--text-secondary)] uppercase tracking-wider mt-1">System Bias Load</span>
                     </CardContent>
                 </Card>
             </div>
@@ -163,17 +163,17 @@ export function CollectiveReport({ data }: Props) {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                 {/* 1. Radar Chart: Systemic Bias Profile */}
-                <Card className="glass-panel p-6 bg-slate-900/60 h-[400px]">
+                <Card className="glass-panel p-6 bg-[var(--bg-primary)]/60 h-[400px]">
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="font-semibold text-slate-200">Systemic Bias Profile</h3>
                         <div className="flex gap-4 text-xs">
                             <div className="flex items-center gap-1">
                                 <span className="w-2 h-2 rounded-full bg-indigo-500/50"></span>
-                                <span className="text-slate-400">Mean Bias</span>
+                                <span className="text-[var(--text-muted)]">Mean Bias</span>
                             </div>
                             <div className="flex items-center gap-1">
                                 <span className="w-2 h-2 rounded-full bg-cyan-400/50"></span>
-                                <span className="text-slate-400">Peak Bias</span>
+                                <span className="text-[var(--text-muted)]">Peak Bias</span>
                             </div>
                         </div>
                     </div>
@@ -209,10 +209,10 @@ export function CollectiveReport({ data }: Props) {
                 </Card>
 
                 {/* 2. Bar Chart: Severity Distribution */}
-                <Card className="glass-panel p-6 bg-slate-900/60 h-[400px]">
+                <Card className="glass-panel p-6 bg-[var(--bg-primary)]/60 h-[400px]">
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="font-semibold text-slate-200">Severity Distribution</h3>
-                        <span className="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded">
+                        <span className="text-xs text-[var(--text-muted)] bg-[var(--bg-secondary)] px-2 py-1 rounded">
                             Flags by Impact Level
                         </span>
                     </div>
@@ -244,7 +244,7 @@ export function CollectiveReport({ data }: Props) {
                                 </BarChart>
                             </ResponsiveContainer>
                         ) : (
-                            <div className="text-center text-slate-500 flex flex-col items-center">
+                            <div className="text-center text-[var(--text-secondary)] flex flex-col items-center">
                                 <CheckCircle className="w-12 h-12 mb-3 text-emerald-500/20" />
                                 <p>No severity flags detected.</p>
                             </div>
@@ -260,7 +260,7 @@ export function CollectiveReport({ data }: Props) {
                         <Activity className="w-4 h-4 mr-2" />
                         Sentinel Engine Executive Summary
                     </h3>
-                    <p className="text-slate-300 leading-relaxed font-serif text-lg italic">
+                    <p className="text-[var(--text-faint)] leading-relaxed font-serif text-lg italic">
                         &quot;{data.batch_conclusion}&quot;
                     </p>
                 </div>

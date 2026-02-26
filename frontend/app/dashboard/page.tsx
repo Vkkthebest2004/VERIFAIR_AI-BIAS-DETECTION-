@@ -10,8 +10,8 @@ import { useTheme } from '@/lib/theme';
 import { DragDropUpload } from '@/components/DragDropUpload';
 import {
     Shield, Activity, History, FileText, Loader2, ChevronDown, ChevronUp,
-    Sun, Moon, LogOut, BarChart3, Zap, Users, Globe, Sparkles, ArrowRight,
-    Fingerprint, Brain,
+    Sun, Moon, LogOut, BarChart3, Zap, Users, Globe, ArrowRight,
+    Fingerprint, Brain, Menu, X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -20,7 +20,7 @@ interface AuditHistoryItem {
     filename: string;
     total_sentences: number;
     bias_flags_count: number;
-    created_at?: string;  // Optional, for backward compatibility if needed
+    created_at?: string;
     upload_date: string;
 }
 
@@ -34,6 +34,7 @@ export default function DashboardPage() {
     const [loadingHistory, setLoadingHistory] = useState(true);
     const [visibleHistoryCount, setVisibleHistoryCount] = useState(5);
     const [auditContext, setAuditContext] = useState("General Audit");
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const fetchHistory = useCallback(async () => {
         const token = getToken();
@@ -73,8 +74,6 @@ export default function DashboardPage() {
                     formData.append('files', new File([blob], `text_input_${idx + 1}.txt`, { type: 'text/plain' }));
                 }
             });
-
-            // Add Context
             formData.append('context', auditContext);
 
             const response = await axios.post(`${API}/audit`, formData, {
@@ -97,11 +96,7 @@ export default function DashboardPage() {
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg-primary)" }}>
             <div className="flex flex-col items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center animate-pulse-glow"
-                    style={{ background: "var(--accent-glow)", border: "1px solid var(--accent-primary)" }}>
-                    <Shield className="w-6 h-6" style={{ color: "var(--accent-primary)" }} />
-                </div>
-                <Loader2 className="w-6 h-6 animate-spin" style={{ color: "var(--accent-primary)" }} />
+                <Loader2 className="w-8 h-8 animate-spin" style={{ color: "var(--accent)" }} />
             </div>
         </div>
     );
@@ -114,180 +109,170 @@ export default function DashboardPage() {
     };
 
     const features = [
-        { icon: BarChart3, title: "Z-Score + WEAT/SEAT", desc: "Statistical anomaly & differential association", color: "#6366f1" },
-        { icon: Users, title: "Stereotype Detection", desc: "13-category StereoSet + CrowS-Pairs", color: "#a78bfa" },
-        { icon: Zap, title: "Hate Speech (3-Layer)", desc: "Dynabench RoBERTa + ToxiGen + Lexicon", color: "#f87171" },
-        { icon: Globe, title: "Selection Bias", desc: "Four-Fifths Rule, Chi-Square, adverse impact", color: "#06b6d4" },
-        { icon: Fingerprint, title: "Resume Forensics", desc: "Name-proxy, college pedigree, language disparity", color: "#f59e0b" },
-        { icon: Brain, title: "Live Copilot", desc: "Real-time speech bias via Web Speech API + dual-tier AI", color: "#8b5cf6" },
+        { icon: BarChart3, title: "Z-Score + WEAT", desc: "Statistical anomaly & differential association", color: "#0071e3", path: null },
+        { icon: Users, title: "Stereotype Detection", desc: "13-category StereoSet + CrowS-Pairs", color: "#af52de", path: null },
+        { icon: Zap, title: "Hate Speech", desc: "Dynabench RoBERTa + ToxiGen + Lexicon", color: "#ff3b30", path: null },
+        { icon: Globe, title: "Selection Bias", desc: "Four-Fifths Rule, Chi-Square, adverse impact", color: "#32ade6", path: "/selection-bias" },
+        { icon: Fingerprint, title: "Resume Forensics", desc: "Name-proxy, college pedigree, disparity", color: "#ff9500", path: "/resume-forensics" },
+        { icon: Brain, title: "Live Copilot", desc: "Real-time speech bias via Web Speech API", color: "#af52de", path: "/live-copilot" },
     ];
 
     return (
-        <main className="min-h-screen font-sans selection:bg-indigo-500/30" style={{ background: "var(--bg-primary)", color: "var(--text-primary)" }}>
+        <main className="min-h-screen font-sans" style={{ background: "var(--bg-primary)", color: "var(--text-primary)" }}>
 
-            {/* ─── Sticky Navbar ─── */}
+            {/* ─── Navbar ─── */}
             <nav
-                className="sticky top-0 z-50 px-6 py-4 backdrop-blur-xl"
+                className="sticky top-0 z-50 backdrop-blur-xl"
                 style={{
                     background: "var(--glass-bg)",
-                    borderBottom: "1px solid var(--border-primary)",
+                    borderBottom: "0.5px solid var(--border-primary)",
                 }}
             >
-                <div className="max-w-7xl mx-auto flex justify-between items-center">
+                <div className="max-w-[1200px] mx-auto px-4 sm:px-6 h-12 flex items-center justify-between">
                     {/* Brand */}
-                    <div className="flex items-center gap-3">
-                        <Image src="/logo.svg" alt="Verifair Logo" width={40} height={40} className="w-10 h-10" />
-                        <div>
-                            <h1 className="text-lg font-bold tracking-tight leading-none">
-                                Veri<span style={{ color: "var(--accent-primary)" }}>fair</span>
-                            </h1>
-                            <p className="text-[11px] font-medium" style={{ color: "var(--text-muted)" }}>
-                                Algorithmic Bias Audit
-                            </p>
-                        </div>
+                    <div className="flex items-center gap-2.5">
+                        <Image src="/logo.svg" alt="Verifair" width={28} height={28} className="w-7 h-7" />
+                        <span className="text-sm font-semibold tracking-tight" style={{ color: "var(--text-primary)" }}>
+                            Verifair
+                        </span>
                     </div>
 
-                    {/* Right Actions */}
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => router.push('/selection-bias')}
-                            className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:scale-[1.02] active:scale-[0.98]"
-                            style={{
-                                background: "var(--bg-card)",
-                                border: "1px solid var(--border-secondary)",
-                                color: "var(--text-secondary)",
-                                boxShadow: "var(--shadow-card)",
-                            }}
-                        >
-                            <Activity className="w-4 h-4" style={{ color: "var(--accent-cyan)" }} />
-                            Selection Bias
-                        </button>
+                    {/* Desktop Nav */}
+                    <div className="hidden md:flex items-center gap-2">
+                        {[
+                            { label: "Selection Bias", path: "/selection-bias", icon: Activity, color: "var(--accent-cyan)" },
+                            { label: "Resume Forensics", path: "/resume-forensics", icon: Fingerprint, color: "#ff9500" },
+                            { label: "Live Copilot", path: "/live-copilot", icon: Brain, color: "var(--accent-violet)" },
+                        ].map((item, i) => {
+                            const Icon = item.icon;
+                            return (
+                                <button
+                                    key={i}
+                                    onClick={() => router.push(item.path)}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all hover:bg-[var(--bg-card-hover)]"
+                                    style={{ color: "var(--text-secondary)" }}
+                                >
+                                    <Icon className="w-3.5 h-3.5" style={{ color: item.color }} />
+                                    {item.label}
+                                </button>
+                            );
+                        })}
+                    </div>
 
-                        <button
-                            onClick={() => router.push('/resume-forensics')}
-                            className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:scale-[1.02] active:scale-[0.98]"
-                            style={{
-                                background: "var(--bg-card)",
-                                border: "1px solid var(--border-secondary)",
-                                color: "var(--text-secondary)",
-                                boxShadow: "var(--shadow-card)",
-                            }}
-                        >
-                            <Fingerprint className="w-4 h-4" style={{ color: "#f59e0b" }} />
-                            Resume Forensics
-                        </button>
-
-                        {/* Live Copilot (Web Speech API) */}
-                        <button
-                            onClick={() => router.push('/live-copilot')}
-                            className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98]"
-                            style={{
-                                background: "var(--bg-card)",
-                                border: "1px solid var(--accent-primary)",
-                                color: "var(--accent-primary)",
-                                boxShadow: "0 0 10px rgba(79, 70, 229, 0.2)",
-                            }}
-                        >
-                            <span className="relative flex h-2.5 w-2.5">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
-                            </span>
-                            Live Copilot
-                        </button>
-
+                    {/* Right */}
+                    <div className="flex items-center gap-2">
                         <button
                             onClick={toggleTheme}
-                            className="p-2.5 rounded-xl transition-all hover:scale-105 active:scale-90"
-                            style={{
-                                background: "var(--bg-card)",
-                                border: "1px solid var(--border-secondary)",
-                                color: "var(--text-secondary)",
-                                boxShadow: "var(--shadow-card)",
-                            }}
+                            className="p-2 rounded-full transition-all hover:bg-[var(--bg-card-hover)]"
+                            style={{ color: "var(--text-muted)" }}
                             title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
                         >
                             {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                         </button>
 
-                        <div className="hidden md:flex items-center gap-3 pl-3 ml-1" style={{ borderLeft: "1px solid var(--border-secondary)" }}>
-                            <div className="text-right">
-                                <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                        <div className="hidden sm:flex items-center gap-3 pl-3 ml-1" style={{ borderLeft: "1px solid var(--border-primary)" }}>
+                            <button
+                                onClick={() => router.push("/profile")}
+                                className="flex items-center gap-2 transition-opacity hover:opacity-80"
+                                title="View Profile"
+                            >
+                                {user.profile_picture_url ? (
+                                    <img src={user.profile_picture_url} alt="Profile" className="w-7 h-7 rounded-full object-cover border border-[var(--border-primary)]" />
+                                ) : (
+                                    <div className="w-7 h-7 rounded-full text-white flex items-center justify-center text-xs font-semibold" style={{ background: "var(--accent)" }}>
+                                        {(user.full_name || user.email)[0].toUpperCase()}
+                                    </div>
+                                )}
+                                <span className="text-xs font-medium" style={{ color: "var(--text-primary)" }}>
                                     {user.full_name || user.email?.split("@")[0]}
-                                </p>
-                                <p className="text-[11px] flex items-center justify-end gap-1.5" style={{ color: "var(--accent-emerald)" }}>
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    Online
-                                </p>
-                            </div>
+                                </span>
+                            </button>
                             <button
                                 onClick={logout}
-                                className="p-2.5 rounded-xl transition-all hover:scale-105 active:scale-90"
-                                style={{
-                                    background: "var(--bg-card)",
-                                    border: "1px solid var(--border-secondary)",
-                                    color: "var(--text-muted)",
-                                    boxShadow: "var(--shadow-card)",
-                                }}
+                                className="p-2 rounded-full transition-all hover:bg-[var(--bg-card-hover)]"
+                                style={{ color: "var(--status-danger)" }}
                                 title="Sign out"
                             >
-                                <LogOut className="w-4 h-4" />
+                                <LogOut className="w-3.5 h-3.5" />
                             </button>
                         </div>
+
+                        {/* Mobile menu */}
+                        <button
+                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            className="md:hidden p-2 rounded-full hover:bg-[var(--bg-card-hover)]"
+                            style={{ color: "var(--text-secondary)" }}
+                        >
+                            {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+                        </button>
                     </div>
                 </div>
+
+                {/* Mobile Dropdown */}
+                {mobileMenuOpen && (
+                    <div className="md:hidden px-4 pb-4 space-y-1" style={{ background: "var(--bg-primary)", borderBottom: "0.5px solid var(--border-primary)" }}>
+                        {[
+                            { label: "Selection Bias", path: "/selection-bias" },
+                            { label: "Resume Forensics", path: "/resume-forensics" },
+                            { label: "Live Copilot", path: "/live-copilot" },
+                        ].map((item, i) => (
+                            <button
+                                key={i}
+                                onClick={() => { router.push(item.path); setMobileMenuOpen(false); }}
+                                className="block w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:bg-[var(--bg-card-hover)]"
+                                style={{ color: "var(--text-secondary)" }}
+                            >
+                                {item.label}
+                            </button>
+                        ))}
+                        <button
+                            onClick={logout}
+                            className="block w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium text-[#ff3b30] hover:bg-[#ff3b30]/5"
+                        >
+                            Sign Out
+                        </button>
+                    </div>
+                )}
             </nav>
 
-            <div className="max-w-7xl mx-auto px-6 py-8">
+            <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
 
-                {/* ─── Welcome Banner ─── */}
-                <div
-                    className="rounded-2xl p-8 mb-8 relative overflow-hidden animate-fade-in-up"
-                    style={{
-                        background: "var(--btn-primary-bg)",
-                        boxShadow: "0 10px 40px -10px rgba(79, 70, 229, 0.35)",
-                    }}
-                >
-                    {/* Decorative orbs */}
-                    <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full opacity-20"
-                        style={{ background: "radial-gradient(circle, rgba(255,255,255,0.3), transparent)" }} />
-                    <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full opacity-10"
-                        style={{ background: "radial-gradient(circle, rgba(255,255,255,0.4), transparent)" }} />
-
-                    <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div>
-                            <div className="flex items-center gap-2 mb-3">
-                                <Sparkles className="w-4 h-4 text-indigo-200" />
-                                <span className="text-indigo-200 text-sm font-medium">Dashboard</span>
-                            </div>
-                            <h2 className="text-3xl font-bold text-white mb-2">
-                                Welcome back, {user.full_name || user.email?.split("@")[0]}
-                            </h2>
-                            <p className="text-indigo-200/80 max-w-md">
-                                Upload documents or paste text to analyze for hidden bias patterns using 6-stage statistical & neural analysis.
-                            </p>
-                        </div>
-
-                        {/* Quick Stats */}
-                        <div className="flex gap-4">
-                            {[
-                                { label: "Total Scans", value: stats.totalScans },
-                                { label: "Flags Found", value: stats.totalFlags },
-                                { label: "Clean Scans", value: stats.cleanScans },
-                            ].map((stat, i) => (
-                                <div key={i} className="px-5 py-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 text-center min-w-[90px]">
-                                    <p className="text-2xl font-bold text-white">{stat.value}</p>
-                                    <p className="text-[11px] text-indigo-200/70 font-medium">{stat.label}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                {/* ─── Welcome Section ─── */}
+                <div className="mb-8 animate-fade-in-up">
+                    <h2 className="text-[28px] sm:text-[32px] font-semibold tracking-[-0.03em] mb-1">
+                        Welcome back, {user.full_name || user.email?.split("@")[0]}.
+                    </h2>
+                    <p className="text-sm sm:text-base" style={{ color: "var(--text-secondary)" }}>
+                        Upload documents or paste text to analyze for hidden bias patterns.
+                    </p>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* ─── Quick Stats ─── */}
+                <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-8 animate-fade-in-up delay-1">
+                    {[
+                        { label: "Total Scans", value: stats.totalScans, color: "var(--accent)" },
+                        { label: "Flags Found", value: stats.totalFlags, color: "#ff3b30" },
+                        { label: "Clean Scans", value: stats.cleanScans, color: "#34c759" },
+                    ].map((stat, i) => (
+                        <div
+                            key={i}
+                            className="p-4 sm:p-5 rounded-2xl text-center"
+                            style={{
+                                background: "var(--bg-card)",
+                                border: "1px solid var(--border-primary)",
+                                boxShadow: "var(--shadow-card)",
+                            }}
+                        >
+                            <p className="text-2xl sm:text-3xl font-semibold" style={{ color: stat.color }}>{stat.value}</p>
+                            <p className="text-[11px] mt-1 font-medium" style={{ color: "var(--text-muted)" }}>{stat.label}</p>
+                        </div>
+                    ))}
+                </div>
 
-                    {/* ─── Sidebar ─── */}
-                    <aside className="lg:col-span-3 space-y-6 animate-fade-in-up delay-1">
-                        {/* History Panel */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
+
+                    {/* ─── Sidebar: History ─── */}
+                    <aside className="lg:col-span-3 animate-fade-in-up delay-2">
                         <div
                             className="rounded-2xl overflow-hidden"
                             style={{
@@ -296,131 +281,109 @@ export default function DashboardPage() {
                                 boxShadow: "var(--shadow-card)",
                             }}
                         >
-                            <div className="p-5 pb-0">
+                            <div className="p-4 sm:p-5">
                                 <h3
-                                    className="text-xs font-bold uppercase tracking-widest flex items-center gap-2 mb-4"
+                                    className="text-xs font-semibold uppercase tracking-wider flex items-center gap-2 mb-4"
                                     style={{ color: "var(--text-muted)" }}
                                 >
                                     <History className="w-3.5 h-3.5" /> Recent Audits
                                 </h3>
-                            </div>
 
-                            <div className="px-3 pb-4 space-y-1">
-                                {loadingHistory ? (
-                                    <div className="py-8 flex justify-center">
-                                        <Loader2 className="w-5 h-5 animate-spin" style={{ color: "var(--text-muted)" }} />
-                                    </div>
-                                ) : history.length === 0 ? (
-                                    <div className="py-8 text-center">
-                                        <FileText className="w-8 h-8 mx-auto mb-3 opacity-30" style={{ color: "var(--text-muted)" }} />
-                                        <p className="text-sm" style={{ color: "var(--text-muted)" }}>No scans yet</p>
-                                        <p className="text-xs mt-1" style={{ color: "var(--text-muted)", opacity: 0.6 }}>Upload a document to get started</p>
-                                    </div>
-                                ) : (
-                                    <>
-                                        {history.slice(0, visibleHistoryCount).map((item, idx) => (
-                                            <button
-                                                key={item.id}
-                                                onClick={() => router.push(`/results/${item.id}`)}
-                                                className="w-full text-left p-3 rounded-xl transition-all hover:scale-[1.01] active:scale-[0.99] group"
-                                                style={{
-                                                    background: "transparent",
-                                                    border: "1px solid transparent",
-                                                }}
-                                                onMouseEnter={e => {
-                                                    e.currentTarget.style.background = "var(--bg-card-hover)";
-                                                    e.currentTarget.style.borderColor = "var(--border-secondary)";
-                                                    e.currentTarget.style.boxShadow = "var(--shadow-card)";
-                                                }}
-                                                onMouseLeave={e => {
-                                                    e.currentTarget.style.background = "transparent";
-                                                    e.currentTarget.style.borderColor = "transparent";
-                                                    e.currentTarget.style.boxShadow = "none";
-                                                }}
-                                            >
-                                                <div className="flex items-center justify-between mb-1.5">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold"
-                                                            style={{
-                                                                background: item.bias_flags_count > 0 ? "rgba(239, 68, 68, 0.1)" : "rgba(16, 185, 129, 0.1)",
-                                                                color: item.bias_flags_count > 0 ? "#ef4444" : "#10b981",
-                                                            }}>
-                                                            {idx + 1}
-                                                        </div>
-                                                        <span className="text-xs font-mono" style={{ color: "var(--text-muted)" }}>
+                                <div className="space-y-1">
+                                    {loadingHistory ? (
+                                        <div className="py-8 flex justify-center">
+                                            <Loader2 className="w-5 h-5 animate-spin" style={{ color: "var(--text-muted)" }} />
+                                        </div>
+                                    ) : history.length === 0 ? (
+                                        <div className="py-8 text-center">
+                                            <FileText className="w-8 h-8 mx-auto mb-3 opacity-20" style={{ color: "var(--text-muted)" }} />
+                                            <p className="text-sm" style={{ color: "var(--text-muted)" }}>No scans yet</p>
+                                            <p className="text-xs mt-1 opacity-60" style={{ color: "var(--text-muted)" }}>Upload a document to get started</p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {history.slice(0, visibleHistoryCount).map((item) => (
+                                                <button
+                                                    key={item.id}
+                                                    onClick={() => router.push(`/results/${item.id}`)}
+                                                    className="w-full text-left p-3 rounded-xl transition-all group"
+                                                    style={{ background: "transparent" }}
+                                                    onMouseEnter={e => {
+                                                        e.currentTarget.style.background = "var(--bg-card-hover)";
+                                                    }}
+                                                    onMouseLeave={e => {
+                                                        e.currentTarget.style.background = "transparent";
+                                                    }}
+                                                >
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <span className="text-[11px] font-mono" style={{ color: "var(--text-muted)" }}>
                                                             {item.upload_date ? new Date(item.upload_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : (item.created_at ? new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '')}
                                                         </span>
+                                                        <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity" style={{ color: "var(--text-muted)" }} />
                                                     </div>
-                                                    <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity" style={{ color: "var(--text-muted)" }} />
-                                                </div>
-                                                <p className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>
-                                                    {item.filename}
-                                                </p>
-                                                <div className="flex items-center gap-2 mt-2">
-                                                    <span className={cn(
-                                                        "text-[11px] px-2 py-0.5 rounded-md font-semibold",
-                                                        item.bias_flags_count > 0
-                                                            ? "bg-red-500/10 text-red-500"
-                                                            : "bg-emerald-500/10 text-emerald-600"
-                                                    )}>
-                                                        {item.bias_flags_count} flags
-                                                    </span>
-                                                    <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
-                                                        · {item.total_sentences} sentences
-                                                    </span>
-                                                </div>
-                                            </button>
-                                        ))}
+                                                    <p className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>
+                                                        {item.filename}
+                                                    </p>
+                                                    <div className="flex items-center gap-2 mt-1.5">
+                                                        <span className={cn(
+                                                            "text-[11px] px-2 py-0.5 rounded-full font-medium",
+                                                            item.bias_flags_count > 0
+                                                                ? "bg-[#ff3b30]/[0.08] text-[#ff3b30]"
+                                                                : "bg-[#34c759]/[0.08] text-[#34c759]"
+                                                        )}>
+                                                            {item.bias_flags_count} flags
+                                                        </span>
+                                                        <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+                                                            · {item.total_sentences} sentences
+                                                        </span>
+                                                    </div>
+                                                </button>
+                                            ))}
 
-                                        {history.length > 5 && (
-                                            <button
-                                                onClick={() => setVisibleHistoryCount(visibleHistoryCount === 5 ? history.length : 5)}
-                                                className="w-full py-2.5 text-xs font-semibold flex items-center justify-center gap-1 rounded-xl transition-all hover:opacity-80"
-                                                style={{ color: "var(--accent-primary)" }}
-                                            >
-                                                {visibleHistoryCount === 5 ? (
-                                                    <>Show All ({history.length}) <ChevronDown className="w-3 h-3" /></>
-                                                ) : (
-                                                    <>Show Less <ChevronUp className="w-3 h-3" /></>
-                                                )}
-                                            </button>
-                                        )}
-                                    </>
-                                )}
+                                            {history.length > 5 && (
+                                                <button
+                                                    onClick={() => setVisibleHistoryCount(visibleHistoryCount === 5 ? history.length : 5)}
+                                                    className="w-full py-2 text-xs font-medium flex items-center justify-center gap-1 rounded-xl transition-all hover:opacity-80"
+                                                    style={{ color: "var(--accent)" }}
+                                                >
+                                                    {visibleHistoryCount === 5 ? (
+                                                        <>Show All ({history.length}) <ChevronDown className="w-3 h-3" /></>
+                                                    ) : (
+                                                        <>Show Less <ChevronUp className="w-3 h-3" /></>
+                                                    )}
+                                                </button>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </aside>
 
                     {/* ─── Main Content ─── */}
-                    <div className="lg:col-span-9 space-y-8">
+                    <div className="lg:col-span-9 space-y-6 sm:space-y-8">
 
                         {/* Upload Panel */}
                         <div
-                            className="rounded-2xl overflow-hidden animate-fade-in-up delay-2"
+                            className="rounded-2xl overflow-hidden animate-fade-in-up delay-3"
                             style={{
                                 background: "var(--bg-card)",
                                 border: "1px solid var(--border-primary)",
                                 boxShadow: "var(--shadow-card)",
                             }}
                         >
-                            <div className="p-8">
+                            <div className="p-5 sm:p-8">
                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                                            style={{ background: "var(--accent-glow)" }}>
-                                            <Activity className="w-5 h-5" style={{ color: "var(--accent-primary)" }} />
-                                        </div>
-                                        <div>
-                                            <h2 className="text-xl font-bold">Initialize Analysis</h2>
-                                            <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                                                Upload documents or paste texts for deep bias auditing
-                                            </p>
-                                        </div>
+                                    <div>
+                                        <h2 className="text-lg sm:text-xl font-semibold tracking-[-0.02em]">Initialize Analysis</h2>
+                                        <p className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>
+                                            Upload documents or paste texts for deep bias auditing
+                                        </p>
                                     </div>
 
                                     {/* Context Selector */}
-                                    <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 rounded-lg p-1 pr-3 border border-transparent focus-within:border-indigo-500/50 transition-all">
-                                        <span className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Context:</span>
+                                    <div className="flex items-center gap-2 rounded-xl px-3 py-2" style={{ background: "var(--bg-secondary)", border: "1px solid var(--border-primary)" }}>
+                                        <span className="text-[11px] font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Context:</span>
                                         <select
                                             value={auditContext}
                                             onChange={(e) => setAuditContext(e.target.value)}
@@ -445,35 +408,36 @@ export default function DashboardPage() {
                         </div>
 
                         {/* Feature Cards */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in-up delay-3">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 animate-fade-in-up delay-4">
                             {features.map((feature, i) => {
                                 const Icon = feature.icon;
                                 return (
                                     <div
                                         key={i}
-                                        className="group p-5 rounded-2xl transition-all hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] cursor-default"
+                                        onClick={() => feature.path && router.push(feature.path)}
+                                        className={cn(
+                                            "group p-4 sm:p-5 rounded-2xl transition-all",
+                                            feature.path ? "cursor-pointer hover:shadow-lg hover:shadow-black/[0.04] hover:-translate-y-0.5" : "cursor-default"
+                                        )}
                                         style={{
                                             background: "var(--bg-card)",
-                                            border: "1px solid var(--border-secondary)",
+                                            border: "1px solid var(--border-primary)",
                                             boxShadow: "var(--shadow-card)",
-                                        }}
-                                        onMouseEnter={e => {
-                                            e.currentTarget.style.boxShadow = "var(--shadow-card-hover)";
-                                            e.currentTarget.style.borderColor = `${feature.color}33`;
-                                        }}
-                                        onMouseLeave={e => {
-                                            e.currentTarget.style.boxShadow = "var(--shadow-card)";
-                                            e.currentTarget.style.borderColor = "var(--border-secondary)";
                                         }}
                                     >
                                         <div
-                                            className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
-                                            style={{ background: `${feature.color}15` }}
+                                            className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center mb-3"
+                                            style={{ background: `${feature.color}10` }}
                                         >
-                                            <Icon className="w-5 h-5" style={{ color: feature.color }} />
+                                            <Icon className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: feature.color }} />
                                         </div>
-                                        <h3 className="font-bold text-sm mb-1.5" style={{ color: feature.color }}>{feature.title}</h3>
-                                        <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>{feature.desc}</p>
+                                        <h3 className="font-semibold text-xs sm:text-sm mb-1" style={{ color: feature.color }}>{feature.title}</h3>
+                                        <p className="text-[11px] sm:text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>{feature.desc}</p>
+                                        {feature.path && (
+                                            <p className="text-[11px] mt-2 font-medium opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: feature.color }}>
+                                                Open →
+                                            </p>
+                                        )}
                                     </div>
                                 );
                             })}
@@ -482,34 +446,22 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Footer */}
-                <footer className="mt-16 pt-6 pb-6" style={{ borderTop: "1px solid var(--border-secondary)" }}>
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm" style={{ color: "var(--text-muted)" }}>
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2">
-                                <Image src="/logo.svg" alt="Verifair Logo" width={20} height={20} className="w-5 h-5" />
-                                <span className="font-bold text-sm" style={{ color: "var(--text-primary)" }}>Verifair</span>
-                            </div>
+                <footer className="mt-12 sm:mt-16 pt-6 pb-6" style={{ borderTop: "1px solid var(--border-primary)" }}>
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs" style={{ color: "var(--text-muted)" }}>
+                        <div className="flex items-center gap-2.5">
+                            <Image src="/logo.svg" alt="Verifair" width={16} height={16} className="w-4 h-4" />
+                            <span className="font-semibold" style={{ color: "var(--text-primary)" }}>Verifair</span>
                             <span
-                                className="px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold"
-                                style={{ background: "var(--accent-glow)", color: "var(--accent-primary)" }}
+                                className="px-2 py-0.5 rounded-full text-[10px] font-mono"
+                                style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
                             >
-                                v3.5.0
+                                v3.6.0
                             </span>
                         </div>
-                        <p className="text-xs">&copy; {new Date().getFullYear()} Verifair. Bias Audit System.</p>
+                        <p>&copy; {new Date().getFullYear()} Verifair. Bias Audit System.</p>
                         <div className="flex items-center gap-4 text-xs">
-                            <a
-                                href="https://github.com/Vkkthebest2004/VERIFAIR_AI-BIAS-DETECTION-"
-                                target="_blank" rel="noopener noreferrer"
-                                className="hover:opacity-80 font-medium" style={{ color: "var(--text-secondary)" }}
-                            >
+                            <a href="https://github.com/Vkkthebest2004/VERIFAIR_AI-BIAS-DETECTION-" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 font-medium" style={{ color: "var(--text-secondary)" }}>
                                 GitHub
-                            </a>
-                            <a href="/selection-bias" className="hover:opacity-80 font-medium" style={{ color: "var(--text-secondary)" }}>
-                                Selection Bias
-                            </a>
-                            <a href="/resume-forensics" className="hover:opacity-80 font-medium" style={{ color: "var(--text-secondary)" }}>
-                                Resume Forensics
                             </a>
                         </div>
                     </div>
